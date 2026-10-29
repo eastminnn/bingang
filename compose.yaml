@@ -23,8 +23,26 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # 외부에는 Caddy만 연다. 8080은 로컬 디버깅용으로 이 컴퓨터에서만 접근
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
+
+  caddy:
+    image: caddy:2.10-alpine
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
 
 volumes:
   db-data:
+  caddy-data:
+  caddy-config:

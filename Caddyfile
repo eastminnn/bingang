@@ -1,0 +1,14 @@
+# SITE_ADDRESS: 로컬은 :80(HTTP), 서버에서는 도메인을 넣으면 HTTPS 인증서를 자동으로 받는다
+{$SITE_ADDRESS}
+
+encode zstd gzip
+
+# API는 Spring Boot로 넘기고, 나머지는 정적 화면
+handle /api/* {
+	reverse_proxy api:8080
+}
+
+handle {
+	root * /srv
+	file_server
+}
