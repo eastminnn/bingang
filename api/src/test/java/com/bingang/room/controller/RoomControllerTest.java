@@ -24,7 +24,7 @@ import com.bingang.room.entity.RoomSchedule;
 import com.bingang.room.repository.RoomRepository;
 import com.bingang.room.repository.RoomScheduleRepository;
 
-@SpringBootTest(properties = "bingang.calendar.enabled=false")
+@SpringBootTest(properties = { "bingang.calendar.enabled=false", "bingang.timetable.enabled=false" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @Transactional

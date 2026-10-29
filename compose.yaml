@@ -20,6 +20,10 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       TZ: Asia/Seoul
+      YU_USERNO: ${YU_USERNO:-}
+      YU_PASSWD: ${YU_PASSWD:-}
+      TIMETABLE_YEAR: ${TIMETABLE_YEAR:-2026}
+      TIMETABLE_SEMESTER_CODE: ${TIMETABLE_SEMESTER_CODE:-U0320021}
     depends_on:
       db:
         condition: service_healthy

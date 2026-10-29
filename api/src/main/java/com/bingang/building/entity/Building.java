@@ -48,6 +48,10 @@ public class Building {
 		this.visible = false;
 	}
 
+	public void updateVisibility(boolean visible) {
+		this.visible = visible;
+	}
+
 	public Long getId() {
 		return id;
 	}

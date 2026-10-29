@@ -21,7 +21,7 @@ import com.bingang.TestcontainersConfiguration;
 import com.bingang.calendar.entity.AcademicEvent;
 import com.bingang.calendar.repository.AcademicEventRepository;
 
-@SpringBootTest(properties = "bingang.calendar.enabled=false")
+@SpringBootTest(properties = { "bingang.calendar.enabled=false", "bingang.timetable.enabled=false" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @Transactional
