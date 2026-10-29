@@ -51,7 +51,7 @@ class RoomRepositoryTest {
 		assertThat(found.getZone()).isEqualTo("B");
 		assertThat(found.isVisible()).isTrue();
 		assertThat(rooms.findByBuilding(found)).extracting(Room::getNumber).containsExactly("201");
-		assertThat(schedules.findByRoomBuildingAndDayOfWeek(found, DayOfWeek.WEDNESDAY))
+		assertThat(schedules.findByBuildingAndDay(found, DayOfWeek.WEDNESDAY))
 			.singleElement()
 			.satisfies(s -> {
 				assertThat(s.getStartTime()).isEqualTo(LocalTime.of(9, 0));
