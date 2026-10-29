@@ -20,4 +20,7 @@ public interface AcademicEventRepository extends JpaRepository<AcademicEvent, Lo
 	@Query("select e.substituteDay from AcademicEvent e where e.substituteDay is not null and e.startDate <= :date and e.endDate >= :date")
 	List<DayOfWeek> findSubstituteDays(LocalDate date);
 
+	@Query("select e from AcademicEvent e where e.startDate <= :to and e.endDate >= :from order by e.startDate, e.sourceId")
+	List<AcademicEvent> findOverlapping(LocalDate from, LocalDate to);
+
 }
