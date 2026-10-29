@@ -1,4 +1,9 @@
-<p align="center"><img src="design/logo/bingang-wordmark.png" alt="빈강" width="360"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="design/logo/bingang-wordmark-dark.png">
+    <img src="design/logo/bingang-wordmark.png" alt="빈강" width="360">
+  </picture>
+</p>
 
 <p align="center">영남대학교의 <b>지금 비어 있는 강의실</b>과 언제까지 비는지를 알려 주는 웹 서비스</p>
 <p align="center"><a href="https://bingang.duckdns.org">bingang.duckdns.org</a></p>
