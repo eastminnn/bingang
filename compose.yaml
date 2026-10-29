@@ -27,13 +27,14 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
 
+  # 화면 파일과 설정은 이미지에 포함 (고친 뒤 docker compose up -d --build caddy)
   caddy:
-    image: caddy:2.10-alpine
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./web:/srv:ro
       - caddy-data:/data
       - caddy-config:/config
     depends_on:

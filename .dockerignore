@@ -1,0 +1,5 @@
+# web/Dockerfile 빌드에는 Caddyfile과 화면 파일만 필요하다
+*
+!Caddyfile
+!web/
+web/Dockerfile
