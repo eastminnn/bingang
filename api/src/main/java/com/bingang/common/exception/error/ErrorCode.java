@@ -1,4 +1,4 @@
-package com.bingang.common.exception;
+package com.bingang.common.exception.error;
 
 import org.springframework.http.HttpStatus;
 

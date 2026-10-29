@@ -2,6 +2,9 @@ package com.bingang.common.exception;
 
 import java.util.List;
 
+import com.bingang.common.exception.error.ErrorCode;
+import com.bingang.common.exception.error.ValidationError;
+
 public class BusinessException extends RuntimeException {
 
 	private final ErrorCode errorCode;
