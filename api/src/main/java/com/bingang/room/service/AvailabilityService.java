@@ -57,17 +57,18 @@ public class AvailabilityService {
 		return new BuildingAvailability(seoul, day, building, statuses);
 	}
 
-	/** 건물 id → 지금 빈 강의실 수 */
-	public Map<Long, Long> freeRoomCounts(Instant at) {
+	/** 건물 id → 빈 강의실 수와 전체 강의실 수 */
+	public Map<Long, RoomCount> roomCounts(Instant at) {
 		ZonedDateTime seoul = at.atZone(ClockConfig.SEOUL);
 		DayOfWeek day = calendar.effectiveDayOf(seoul.toLocalDate());
 		Map<Long, DaySchedule> byRoom = daySchedules(schedules.findByDay(day));
 
-		Map<Long, Long> counts = new HashMap<>();
+		Map<Long, RoomCount> counts = new HashMap<>();
 		for (Room room : rooms.findAll()) {
 			DaySchedule schedule = byRoom.get(room.getId());
 			boolean free = schedule == null || !schedule.stateAt(seoul.toLocalTime()).busy();
-			counts.merge(room.getBuilding().getId(), free ? 1L : 0L, Long::sum);
+			counts.compute(room.getBuilding().getId(),
+					(id, count) -> (count == null ? new RoomCount(0, 0) : count).add(free));
 		}
 		return counts;
 	}

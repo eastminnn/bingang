@@ -128,11 +128,12 @@ class AvailabilityServiceTest {
 	}
 
 	@Test
-	void 건물별_빈_강의실_수를_센다() {
-		var counts = availability.freeRoomCounts(seoul("2026-10-28T11:10:00"));
+	void 건물별_빈_강의실_수와_전체_수를_센다() {
+		var counts = availability.roomCounts(seoul("2026-10-28T11:10:00"));
 
 		// 인문관: 201 빈, 105 사용 중 / 천마관: 301 빈
-		assertThat(counts).containsEntry(humanities.getId(), 1L).containsEntry(cheonma.getId(), 1L);
+		assertThat(counts).containsEntry(humanities.getId(), new RoomCount(1, 2))
+			.containsEntry(cheonma.getId(), new RoomCount(1, 1));
 	}
 
 }
