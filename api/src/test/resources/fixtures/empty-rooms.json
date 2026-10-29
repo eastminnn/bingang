@@ -1,0 +1,6 @@
+{"result7":[
+ {"yy":"2026","shtmCd":"U0320021","ltDong":"B03","ltDongNm":"인문관","ltRoomNo":"B03-201","ltRoomNm":"강의실","ltRoomType1":"일반강의실","admtRcnt":"60","elAtndYn":"Y","maUseSust":"국어국문학과"},
+ {"yy":"2026","shtmCd":"U0320021","ltDong":"B03","ltDongNm":"인문관","ltRoomNo":"B03-B101","ltRoomNm":"세미나실","ltRoomType1":"세미나실","admtRcnt":"","elAtndYn":"N","maUseSust":null},
+ {"yy":"2026","shtmCd":"U0320021","ltDong":"C03","ltDongNm":" 천마관 ","ltRoomNo":"C03-1012","ltRoomNm":null,"ltRoomType1":null,"admtRcnt":120,"elAtndYn":"Y","maUseSust":null},
+ {"yy":"2026","shtmCd":"U0320021","ltDong":"C03","ltDongNm":"천마관","ltRoomNo":"","ltRoomNm":"번호 없는 방","ltRoomType1":null,"admtRcnt":"30","elAtndYn":"N","maUseSust":null}
+]}
