@@ -98,14 +98,14 @@ public class TimetableCollector {
 	}
 
 	private Result replace(Timetable timetable) {
+		schedules.deleteAllSchedules();
+
 		Map<String, Building> buildingByCode = buildings.findAll()
 			.stream()
 			.collect(Collectors.toMap(Building::getCode, Function.identity()));
 		Map<String, Room> leftover = rooms.findAllWithBuilding()
 			.stream()
 			.collect(Collectors.toMap(r -> r.getBuilding().getCode() + "-" + r.getNumber(), Function.identity()));
-
-		schedules.deleteAllInBatch();
 
 		Map<String, Room> roomByKey = new HashMap<>();
 		for (FreeRoom collected : timetable.rooms()) {
@@ -114,8 +114,6 @@ public class TimetableCollector {
 			if (!building.getName().equals(collected.buildingName())) {
 				building.rename(collected.buildingName());
 			}
-			// 강의실이 있어도 빈 강의실을 찾을 곳이 아닌 건물은 설정으로 숨긴다
-			building.updateVisibility(!hiddenCodes.contains(building.getCode()));
 			Room room = leftover.remove(collected.key());
 			if (room == null) {
 				room = rooms.save(new Room(building, collected.number(), floorOf(collected.number())));
@@ -126,11 +124,20 @@ public class TimetableCollector {
 		// 이번 수집에 없는 강의실은 지운다 (계속 비어 있는 것처럼 보이지 않게)
 		rooms.deleteAll(leftover.values());
 
+		// 강의실이 남지 않은 건물과 설정으로 숨긴 건물은 목록에서 뺀다
+		Set<String> withRooms = roomByKey.values()
+			.stream()
+			.map(room -> room.getBuilding().getCode())
+			.collect(Collectors.toSet());
+		buildingByCode.values()
+			.forEach(b -> b.updateVisibility(withRooms.contains(b.getCode()) && !hiddenCodes.contains(b.getCode())));
+
 		schedules.saveAll(timetable.sessions()
 			.stream()
 			.map(s -> new RoomSchedule(roomByKey.get(s.roomKey()), s.day(), s.start(), s.end()))
 			.toList());
-		return new Result(buildingByCode.size(), roomByKey.size(), timetable.sessions().size(), leftover.size());
+		return new Result(buildingByCode.size(), roomByKey.size(), timetable.sessions().size(), leftover.size(),
+				timetable.unusedRooms());
 	}
 
 	/** 호수로 층을 정한다: 201 → 2, 1012 → 10, B101 → -1, 그 외 null */
@@ -159,7 +166,8 @@ public class TimetableCollector {
 		}
 	}
 
-	public record Result(int buildings, int rooms, int sessions, int removedRooms) {
+	/** unusedRooms: 일주일 내내 수업이 없어 저장하지 않은 강의실 수 */
+	public record Result(int buildings, int rooms, int sessions, int removedRooms, int unusedRooms) {
 	}
 
 }

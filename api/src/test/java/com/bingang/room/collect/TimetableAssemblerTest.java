@@ -48,9 +48,16 @@ class TimetableAssemblerTest {
 	void 빈_강의실을_뒤집어_사용_중인_시간으로_만든다() {
 		Timetable timetable = TimetableAssembler.assemble(monday(Map.of("101", Set.of("1A", "1B", "2A", "2B"))));
 
-		assertThat(timetable.rooms()).hasSize(12);
 		assertThat(timetable.sessions())
 			.containsExactly(new BusySession("B03-101", DayOfWeek.MONDAY, t("09:00"), t("11:00")));
+	}
+
+	@Test
+	void 일주일_내내_수업이_없는_강의실은_뺀다() {
+		Timetable timetable = TimetableAssembler.assemble(monday(Map.of("101", Set.of("1A"), "102", Set.of("5A"))));
+
+		assertThat(timetable.rooms()).extracting(FreeRoom::key).containsExactly("B03-101", "B03-102");
+		assertThat(timetable.unusedRooms()).isEqualTo(10);
 	}
 
 	@Test

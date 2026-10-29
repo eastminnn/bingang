@@ -61,13 +61,16 @@ class TimetableCollectorTest {
 			.toList();
 	}
 
-	/** B03-101은 월요일 1A·1B에 사용 중, 나머지는 항상 비어 있는 학교 시스템 */
+	/** 모든 강의실은 화요일 1A에 사용 중, B03-101은 월요일 1A·1B에도 사용 중인 학교 시스템 */
 	private YuPortalClient.Session portal(List<FreeRoom> all) {
 		YuPortalClient.Session session = mock(YuPortalClient.Session.class);
 		given(session.freeRooms(anyString(), anyString(), anyInt(), any())).willAnswer(invocation -> {
 			int day = invocation.getArgument(2);
 			Slot slot = invocation.getArgument(3);
 			List<FreeRoom> free = new ArrayList<>(all);
+			if (day == 2 && slot.label().equals("1A")) {
+				free.clear();
+			}
 			if (day == 1 && (slot.label().equals("1A") || slot.label().equals("1B"))) {
 				free.removeIf(r -> r.key().equals("B03-101"));
 			}
@@ -87,7 +90,7 @@ class TimetableCollectorTest {
 		em.flush();
 		em.clear();
 
-		assertThat(result).isEqualTo(new TimetableCollector.Result(2, 12, 1, 0));
+		assertThat(result).isEqualTo(new TimetableCollector.Result(2, 12, 13, 0, 0));
 		assertThat(buildings.findByCode("B03").orElseThrow().getName()).isEqualTo("인문관");
 		// 설정의 숨김 코드(C03)는 목록에서 빠진다
 		assertThat(buildings.findByCode("B03").orElseThrow().isVisible()).isTrue();
@@ -98,11 +101,12 @@ class TimetableCollectorTest {
 			.findFirst()
 			.orElseThrow();
 		assertThat(r101.getFloor()).isEqualTo((short) 1);
-		assertThat(schedules.findAll()).singleElement().satisfies(s -> {
-			assertThat(s.getDayOfWeek()).isEqualTo(DayOfWeek.MONDAY);
-			assertThat(s.getStartTime()).isEqualTo(LocalTime.of(9, 0));
-			assertThat(s.getEndTime()).isEqualTo(LocalTime.of(10, 0));
-		});
+		assertThat(schedules.findAll()).filteredOn(s -> s.getDayOfWeek() == DayOfWeek.MONDAY)
+			.singleElement()
+			.satisfies(s -> {
+				assertThat(s.getStartTime()).isEqualTo(LocalTime.of(9, 0));
+				assertThat(s.getEndTime()).isEqualTo(LocalTime.of(10, 0));
+			});
 	}
 
 	@Test
@@ -124,7 +128,7 @@ class TimetableCollectorTest {
 
 		assertThat(result.removedRooms()).isEqualTo(1);
 		assertThat(rooms.count()).isEqualTo(11);
-		assertThat(schedules.count()).isEqualTo(1);
+		assertThat(schedules.count()).isEqualTo(12);
 	}
 
 	@Test
@@ -143,7 +147,30 @@ class TimetableCollectorTest {
 
 		assertThatThrownBy(collector::collect).isInstanceOf(ResourceAccessException.class);
 		assertThat(rooms.count()).isEqualTo(12);
-		assertThat(schedules.count()).isEqualTo(1);
+		assertThat(schedules.count()).isEqualTo(13);
+	}
+
+	@Test
+	void 수업이_없는_강의실은_저장하지_않고_강의실이_없는_건물은_숨긴다() {
+		List<FreeRoom> all = new ArrayList<>(rooms("B03", 101, 112));
+		all.add(new FreeRoom("E03", "천마아트센터 중강당동", "101", null, null, 300));
+		YuPortalClient.Session session = mock(YuPortalClient.Session.class);
+		// E03-101만 항상 비어 있고 나머지는 화요일 1A에 사용 중
+		given(session.freeRooms(anyString(), anyString(), anyInt(), any())).willAnswer(invocation -> {
+			int day = invocation.getArgument(2);
+			Slot slot = invocation.getArgument(3);
+			return day == 2 && slot.label().equals("1A")
+					? all.stream().filter(r -> r.buildingCode().equals("E03")).toList() : all;
+		});
+		given(client.login()).willReturn(session);
+
+		TimetableCollector.Result result = collector.collect();
+		em.flush();
+		em.clear();
+
+		assertThat(result.unusedRooms()).isEqualTo(1);
+		assertThat(rooms.count()).isEqualTo(12);
+		assertThat(buildings.findByVisibleTrueOrderByCode()).extracting(b -> b.getCode()).containsExactly("B03");
 	}
 
 	@Test

@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.bingang.building.entity.Building;
@@ -17,5 +18,10 @@ public interface RoomScheduleRepository extends JpaRepository<RoomSchedule, Long
 
 	@Query("select s from RoomSchedule s join fetch s.room where s.dayOfWeek = :day")
 	List<RoomSchedule> findByDay(DayOfWeek day);
+
+	// 한 번에 지우고 영속성 컨텍스트도 비워, 메모리에 남은 시간표가 지운 강의실을 다시 참조하지 않게 한다
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("delete from RoomSchedule")
+	void deleteAllSchedules();
 
 }
