@@ -1,0 +1,71 @@
+name: Test and Deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "design/**"
+      - "**.md"
+  workflow_dispatch:
+
+# 배포가 겹치면 먼저 시작한 것을 끝까지 하고 다음 것을 실행한다
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      # Testcontainers가 러너의 Docker로 PostgreSQL을 띄운다
+      - run: ./gradlew test
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SSH 설정
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # 서버의 .env와 DB·인증서 볼륨은 그대로 두고 코드만 바꾼다
+      - name: 코드 전송과 재시작
+        env:
+          TARGET: ubuntu@${{ secrets.DEPLOY_HOST }}
+        run: |
+          git archive --format=tar HEAD | ssh -i ~/.ssh/deploy "$TARGET" '
+            set -e
+            cd ~/bingang
+            rm -rf api web docs design
+            tar -x -C .
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
+          '
+
+      - name: 헬스 체크
+        run: |
+          for i in $(seq 1 40); do
+            if curl -sf https://bingang.duckdns.org/api/buildings > /dev/null; then
+              echo "배포 확인 (${i}회째)"; exit 0
+            fi
+            sleep 5
+          done
+          echo "헬스 체크 실패"; exit 1
