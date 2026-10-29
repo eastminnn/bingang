@@ -96,7 +96,7 @@
 |---|---|---|
 | 건물·강의실 | 학생종합정보시스템 '빈강의실조회' 응답 (학교 시스템 코드, 예: B03 인문관) | 시간표 수집 때 함께 저장 |
 | 강의 시간표 | 학생종합정보시스템 '빈강의실조회' (로그인 필요, 사용 허락 받음) | 수집기가 학기 초 1회 + 주 1회, 요일 × 교시별로 빈 강의실을 조회하고 뒤집어 `room_schedule`에 저장 |
-| 학사 일정 | `https://www.yu.ac.kr/main/bachelor/calendar.do` (로그인 불필요) | 페이지 HTML에 들어 있는 `calData` JSON을 하루 1회 수집 |
+| 학사 일정 | `https://www.yu.ac.kr/main/bachelor/calendar.do` (로그인 불필요) | 페이지 HTML에 들어 있는 `calData` JSON을 하루 1회(05:00) 수집, `articleNo` 기준 upsert. 테이블이 비어 있으면 앱 시작 때 바로 1회 |
 
 ## 5. 비기능 요구사항
 
