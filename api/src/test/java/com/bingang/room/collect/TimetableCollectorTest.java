@@ -31,7 +31,7 @@ import com.bingang.room.repository.RoomScheduleRepository;
 import jakarta.persistence.EntityManager;
 
 @DataJpaTest(properties = { "bingang.timetable.year=2026", "bingang.timetable.semester-code=U0320021",
-		"bingang.timetable.request-interval=0s" })
+		"bingang.timetable.request-interval=0s", "bingang.building.hidden-codes=C03" })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({ TestcontainersConfiguration.class, TimetableCollector.class })
 class TimetableCollectorTest {
@@ -89,6 +89,9 @@ class TimetableCollectorTest {
 
 		assertThat(result).isEqualTo(new TimetableCollector.Result(2, 12, 1, 0));
 		assertThat(buildings.findByCode("B03").orElseThrow().getName()).isEqualTo("인문관");
+		// 설정의 숨김 코드(C03)는 목록에서 빠진다
+		assertThat(buildings.findByCode("B03").orElseThrow().isVisible()).isTrue();
+		assertThat(buildings.findByCode("C03").orElseThrow().isVisible()).isFalse();
 		Room r101 = rooms.findAllWithBuilding()
 			.stream()
 			.filter(r -> r.getNumber().equals("101"))

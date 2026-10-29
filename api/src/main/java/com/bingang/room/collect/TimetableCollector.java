@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,11 +56,14 @@ public class TimetableCollector {
 
 	private final Duration interval;
 
+	private final Set<String> hiddenCodes;
+
 	public TimetableCollector(YuPortalClient client, BuildingRepository buildings, RoomRepository rooms,
 			RoomScheduleRepository schedules, TransactionTemplate transaction,
 			@Value("${bingang.timetable.year}") String year,
 			@Value("${bingang.timetable.semester-code}") String semesterCode,
-			@Value("${bingang.timetable.request-interval}") Duration interval) {
+			@Value("${bingang.timetable.request-interval}") Duration interval,
+			@Value("${bingang.building.hidden-codes:}") List<String> hiddenCodes) {
 		this.client = client;
 		this.buildings = buildings;
 		this.rooms = rooms;
@@ -68,6 +72,7 @@ public class TimetableCollector {
 		this.year = year;
 		this.semesterCode = semesterCode;
 		this.interval = interval;
+		this.hiddenCodes = Set.copyOf(hiddenCodes);
 	}
 
 	/**
@@ -109,6 +114,8 @@ public class TimetableCollector {
 			if (!building.getName().equals(collected.buildingName())) {
 				building.rename(collected.buildingName());
 			}
+			// 강의실이 있어도 빈 강의실을 찾을 곳이 아닌 건물은 설정으로 숨긴다
+			building.updateVisibility(!hiddenCodes.contains(building.getCode()));
 			Room room = leftover.remove(collected.key());
 			if (room == null) {
 				room = rooms.save(new Room(building, collected.number(), floorOf(collected.number())));
