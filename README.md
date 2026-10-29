@@ -23,13 +23,8 @@
 4. [서버 사양](#서버-사양)
 5. [데이터 수집](#데이터-수집)
 6. [빈 강의실 판정](#빈-강의실-판정)
-7. [API](#api)
-8. [CI/CD](#cicd)
-9. [운영과 보안](#운영과-보안)
-10. [기술 스택](#기술-스택)
-11. [프로젝트 구조](#프로젝트-구조)
-12. [로컬 실행](#로컬-실행)
-13. [로드맵](#로드맵)
+7. [기술 스택](#기술-스택)
+8. [프로젝트 구조](#프로젝트-구조)
 
 ## 개요
 
@@ -102,14 +97,6 @@ flowchart LR
 
 사용자 요청은 우리 DB만 조회하고 학교 시스템으로 넘기지 않는다. 학교 시스템에 장애가 나도 서비스는 마지막으로 수집한 데이터로 동작한다.
 
-### 컨테이너 구성
-
-| 서비스 | 이미지 | 포트 | 볼륨 | 역할 |
-|---|---|---|---|---|
-| `caddy` | `caddy:2.10-alpine` 기반 자체 이미지 | 80, 443 (외부) | `caddy-data`, `caddy-config` | HTTPS, 정적 파일, 리버스 프록시 |
-| `api` | `eclipse-temurin:21-jre` 기반 자체 이미지 | 8080 (`127.0.0.1`) | - | REST API, 수집 스케줄러 |
-| `db` | `postgres:17-alpine` | 내부 전용 | `db-data` | 데이터 저장, 헬스 체크 후 API 기동 |
-
 ## 서버 사양
 
 | 항목 | 값 |
@@ -153,42 +140,6 @@ flowchart LR
 
 자세한 규칙과 응답 예시는 [요구사항 명세 (SRS)](docs/srs.md)에 있다.
 
-## API
-
-| 메서드 | 경로 | 설명 |
-|---|---|---|
-| `GET` | `/api/buildings?at=` | 건물 목록, 건물별 빈 강의실 수와 전체 강의실 수 |
-| `GET` | `/api/buildings/{code}/rooms?at=` | 강의실별 상태(`busy`, `freeUntil`, `freeAt`)와 그날 수업 |
-| `GET` | `/api/academic-events?from=&to=` | 기간과 겹치는 학사 일정, 보강 요일 |
-
-- `at`은 ISO-8601 시각이며 생략하면 현재 시각이다. 응답 시각은 항상 `+09:00`이다.
-- 오류는 `{ status, code, message, errors }` 공통 형식이며, 처리하지 못한 예외도 내부 정보 없이 500으로 응답한다.
-
-## CI/CD
-
-```mermaid
-flowchart LR
-    PR["Pull Request"] --> T1["테스트<br/>JUnit 5 · Testcontainers"]
-    M["main 머지"] --> T2["테스트"] --> S["SSH로 코드 전송"] --> B["서버에서<br/>docker compose up -d --build"] --> HC["외부 헬스 체크<br/>HTTPS /api/buildings"]
-```
-
-- PR마다 테스트를 실행하고, `main`에 머지되면 테스트 통과 후 자동 배포한다.
-- 서버는 GitHub에 접근하지 않는다. Actions가 `git archive`로 코드를 보내고 서버의 `.env`와 볼륨은 그대로 둔다.
-- 문서·디자인만 바뀐 머지는 배포하지 않는다. 배포는 동시에 하나만 실행한다.
-- 작업은 이슈 → 브랜치(`feat/#번호-이름`) → PR(템플릿) 순서로 진행한다.
-
-## 운영과 보안
-
-| 항목 | 내용 |
-|---|---|
-| 재시작 | 모든 컨테이너 `restart: unless-stopped`. 서버 재부팅 후 자동 복구 확인 |
-| HTTPS | Caddy가 인증서 발급·갱신, HTTP는 HTTPS로 308 리다이렉트 |
-| 네트워크 | 서버 iptables에서 22·80·443만 허용 |
-| 노출 최소화 | API는 `127.0.0.1` 바인딩, DB는 내부 전용, `/actuator`는 외부에서 접근 불가 |
-| 비밀값 | DB 비밀번호·학교 계정은 서버 `.env`(권한 600)와 GitHub Secrets에만 보관 |
-| 스키마 | Flyway로 버전 관리, JPA는 `validate`만 수행해 코드와 스키마 불일치를 기동 시 차단 |
-| 장애 내성 | 수집 실패 시 기존 데이터 유지, 사용자 요청은 학교 시스템과 분리 |
-
 ## 기술 스택
 
 | 영역 | 기술 |
@@ -220,25 +171,3 @@ bingang/
 ```
 
 도메인(`building`, `room`, `calendar`)별로 패키지를 나누고, 그 안을 계층별로 나눈다. 의존은 `room → building`, `room → calendar` 방향으로만 흐른다.
-
-## 로컬 실행
-
-요구 사항: Docker, Java 21 (테스트 실행 시)
-
-```bash
-cp .env.example .env          # DB 비밀번호 등. 시간표 수집에는 학교 계정(YU_USERNO, YU_PASSWD)이 필요
-docker compose up -d --build
-open http://localhost
-```
-
-```bash
-cd api && ./gradlew test      # Testcontainers가 PostgreSQL을 띄운다 (Docker 필요)
-```
-
-## 로드맵
-
-- [ ] Prometheus · Grafana로 JVM, API 응답 시간, DB 지표 수집
-- [ ] Loki로 로그 수집, 수집 실패·5xx Discord 알림
-- [ ] k6 부하 테스트: 목표 초당 100건에서 p95 200ms 이하, 에러율 1% 미만 ([SRS N-9](docs/srs.md))
-- [ ] 측정 결과에 따라 시간표 캐시 도입
-- [ ] 리버스 프록시를 Nginx로 바꿔 비교
