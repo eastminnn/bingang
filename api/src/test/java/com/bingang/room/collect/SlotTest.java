@@ -9,9 +9,10 @@ import org.junit.jupiter.api.Test;
 class SlotTest {
 
 	@Test
-	void 하루는_24칸이고_코드는_00부터_23까지다() {
+	void 하루는_24칸이고_야간_교시는_21번부터다() {
 		assertThat(Slot.ALL).hasSize(24);
-		assertThat(Slot.ALL).extracting(Slot::code).doesNotHaveDuplicates().startsWith("00", "01").endsWith("23");
+		assertThat(Slot.ALL).extracting(Slot::code).doesNotHaveDuplicates().startsWith("00", "01").endsWith("21", "22", "23", "24", "25");
+		assertThat(Slot.ALL).extracting(Slot::code).doesNotContain("19", "20");
 	}
 
 	@Test
@@ -25,8 +26,8 @@ class SlotTest {
 
 	@Test
 	void 야간_교시는_학교_시간표를_따른다() {
-		assertThat(Slot.ALL.get(19)).isEqualTo(new Slot("19", "11", LocalTime.of(18, 0), LocalTime.of(18, 50)));
-		assertThat(Slot.ALL.get(23)).isEqualTo(new Slot("23", "15", LocalTime.of(21, 20), LocalTime.of(22, 5)));
+		assertThat(Slot.ALL.get(19)).isEqualTo(new Slot("21", "11", LocalTime.of(18, 0), LocalTime.of(18, 50)));
+		assertThat(Slot.ALL.get(23)).isEqualTo(new Slot("25", "15", LocalTime.of(21, 20), LocalTime.of(22, 5)));
 	}
 
 }
