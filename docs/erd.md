@@ -9,17 +9,19 @@ erDiagram
 
     building {
         bigint id PK
-        varchar code UK "예: E21"
-        varchar name "예: IT관"
+        varchar code UK "학교 시스템 코드, 예: B03"
+        varchar name "예: 인문관"
         char zone "A~G (code 첫 글자)"
         boolean visible "목록 노출 여부"
     }
     room {
         bigint id PK
         bigint building_id FK
-        varchar number "예: 301"
-        smallint floor
+        varchar number "예: 201"
+        smallint floor "NULL 허용"
         int capacity "NULL 허용"
+        varchar name "강의실 이름, NULL 허용"
+        varchar type "강의실 종류, NULL 허용"
     }
     room_schedule {
         bigint id PK
@@ -53,4 +55,5 @@ erDiagram
 - 학기 구분은 없다. 학기가 바뀌면 시간표를 교체한다.
 - `academic_event.substitute_day`는 수집할 때 `공휴일수업대체지정일(… (목) …)`을 해석해서 채운다. 판정할 때는 그 날짜에 값이 있으면 그 요일의 시간표를 쓴다.
 - `building.visible`: 시간표가 있어도 목록에서 뺄 건물(예: 중앙도서관)을 숨긴다.
-- 스키마는 Flyway로 관리하고, 가짜 시간표 시드는 `local` 프로필에서만 적용한다.
+- `building`·`room`은 시간표 수집기가 빈강의실조회 응답(`ltDong`, `ltDongNm`, `ltRoomNo`, `admtRcnt`, `ltRoomNm`, `ltRoomType1`)으로 채운다. 건물 코드는 캠퍼스 지도가 아니라 학교 시스템 코드를 쓴다.
+- 스키마는 Flyway로 관리한다 (`V1__init.sql`, `V2__room_details.sql`).
