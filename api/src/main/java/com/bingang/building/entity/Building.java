@@ -1,4 +1,4 @@
-package com.bingang.room.entity;
+package com.bingang.building.entity;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;

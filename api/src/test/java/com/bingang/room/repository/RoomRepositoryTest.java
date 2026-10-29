@@ -14,7 +14,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import com.bingang.TestcontainersConfiguration;
-import com.bingang.room.entity.Building;
+import com.bingang.building.entity.Building;
+import com.bingang.building.repository.BuildingRepository;
 import com.bingang.room.entity.Room;
 import com.bingang.room.entity.RoomSchedule;
 

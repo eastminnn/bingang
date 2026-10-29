@@ -1,5 +1,7 @@
 package com.bingang.room.entity;
 
+import com.bingang.building.entity.Building;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
