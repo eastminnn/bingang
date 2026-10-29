@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -14,6 +15,7 @@ services:
 
   api:
     build: ./api
+    restart: unless-stopped
     environment:
       DB_HOST: db
       DB_NAME: ${DB_NAME}
@@ -36,6 +38,7 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+    restart: unless-stopped
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     volumes:
