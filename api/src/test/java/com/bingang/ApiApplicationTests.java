@@ -5,7 +5,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+// 테스트 중에 학교 사이트로 요청이 나가지 않도록 수집 스케줄러를 끈다
+@SpringBootTest(properties = "bingang.calendar.enabled=false")
 class ApiApplicationTests {
 
 	@Test
