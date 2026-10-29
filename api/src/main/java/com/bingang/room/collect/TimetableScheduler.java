@@ -48,8 +48,8 @@ public class TimetableScheduler {
 		}
 		try {
 			TimetableCollector.Result result = collector.collect();
-			log.info("시간표 수집 완료: buildings={}, rooms={}, sessions={}, removedRooms={}", result.buildings(),
-					result.rooms(), result.sessions(), result.removedRooms());
+			log.info("시간표 수집 완료: buildings={}, rooms={}, sessions={}, removedRooms={}, unusedRooms={}",
+					result.buildings(), result.rooms(), result.sessions(), result.removedRooms(), result.unusedRooms());
 		}
 		catch (Exception e) {
 			log.error("시간표 수집 실패, 기존 데이터를 유지합니다", e);

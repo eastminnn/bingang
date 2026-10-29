@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 /**
  * 칸별 "빈 강의실" 목록을 뒤집어 강의실별 "사용 중 시간"으로 만든다.
  * 전체 강의실 = 한 번이라도 응답에 나온 강의실. 그 칸에 없으면 사용 중이다.
+ * 일주일 내내 사용 시간이 없는 강의실은 수업에 쓰지 않는 공간으로 보고 뺀다.
  */
 public final class TimetableAssembler {
 
@@ -64,7 +65,9 @@ public final class TimetableAssembler {
 				}
 			}
 		}
-		return new Timetable(List.copyOf(rooms.values()), sessions);
+		Set<String> used = sessions.stream().map(BusySession::roomKey).collect(Collectors.toSet());
+		List<FreeRoom> usedRooms = rooms.values().stream().filter(room -> used.contains(room.key())).toList();
+		return new Timetable(usedRooms, sessions, rooms.size() - usedRooms.size());
 	}
 
 	private static List<DayOfWeek> days(Map<SlotKey, Set<String>> freeKeys) {
@@ -77,7 +80,8 @@ public final class TimetableAssembler {
 	public record BusySession(String roomKey, DayOfWeek day, LocalTime start, LocalTime end) {
 	}
 
-	public record Timetable(List<FreeRoom> rooms, List<BusySession> sessions) {
+	/** unusedRooms: 수업이 없어 뺀 강의실 수 */
+	public record Timetable(List<FreeRoom> rooms, List<BusySession> sessions, int unusedRooms) {
 	}
 
 }
