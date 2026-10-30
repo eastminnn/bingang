@@ -74,6 +74,8 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/bingang.json
+      # 알림을 보낼 디스코드 채널 웹훅 (없으면 기동 실패: 알림 없이 운영되지 않도록)
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:?DISCORD_WEBHOOK_URL을 .env에 넣어 주세요}
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:

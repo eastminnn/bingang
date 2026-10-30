@@ -1,0 +1,14 @@
+# 알림을 보낼 곳: 디스코드 채널 웹훅 (주소는 .env의 DISCORD_WEBHOOK_URL)
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: discord
+    receivers:
+      - uid: discord
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: ${DISCORD_WEBHOOK_URL}
+          use_discord_username: false
+          title: '{{ template "bingang.title" . }}'
+          message: '{{ template "bingang.message" . }}'
