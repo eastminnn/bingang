@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,6 +31,8 @@ import jakarta.validation.constraints.Min;
 @WebMvcTest(controllers = ErrorResponseController.class)
 @Import(GlobalExceptionHandlerTest.TestController.class)
 class GlobalExceptionHandlerTest {
+
+	static final String OPENMETRICS = "application/openmetrics-text";
 
 	@Autowired
 	MockMvc mvc;
@@ -90,6 +93,15 @@ class GlobalExceptionHandlerTest {
 			.andExpect(content().string(not(containsString("db password"))));
 	}
 
+	// /actuator/prometheus처럼 JSON이 아닌 형식을 내는 곳에서 예외가 나도 JSON 오류로 응답한다 (#37)
+	@Test
+	void JSON이_아닌_응답에서_예외가_나도_JSON으로_응답한다() throws Exception {
+		mvc.perform(get("/test/text").accept(OPENMETRICS))
+			.andExpect(status().isInternalServerError())
+			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+			.andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"));
+	}
+
 	@Test
 	void 컨트롤러_밖_에러도_같은_형식으로_응답한다() throws Exception {
 		mvc.perform(get("/error").requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 404))
@@ -114,6 +126,12 @@ class GlobalExceptionHandlerTest {
 		@GetMapping("/test/size")
 		int size(@RequestParam @Min(1) int size) {
 			return size;
+		}
+
+		// actuator의 Prometheus 엔드포인트처럼 JSON이 아닌 형식만 내는 곳에서 실패하는 경우
+		@GetMapping(value = "/test/text", produces = OPENMETRICS)
+		String text() {
+			throw new IllegalStateException("db down");
 		}
 
 		@GetMapping("/test/boom")

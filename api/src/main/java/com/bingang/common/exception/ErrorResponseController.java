@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.webmvc.error.ErrorController;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +31,9 @@ public class ErrorResponseController implements ErrorController {
 			log.error("Error outside controller: status={}", status.value(),
 					exception instanceof Throwable throwable ? throwable : null);
 		}
-		return ResponseEntity.status(errorCode.getStatus()).body(ErrorResponse.of(errorCode));
+		return ResponseEntity.status(errorCode.getStatus())
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(ErrorResponse.of(errorCode));
 	}
 
 	private HttpStatus resolveStatus(HttpServletRequest request) {
