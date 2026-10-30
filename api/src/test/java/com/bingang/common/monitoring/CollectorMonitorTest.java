@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
@@ -79,6 +80,20 @@ class CollectorMonitorTest {
 		CollectorStatus status = statuses.findById(CollectorMonitor.TIMETABLE).orElseThrow();
 		assertThat(status.getLastFailureAt()).isEqualTo(NOW);
 		assertThat(status.getLastSuccessAt()).isNull();
+	}
+
+	@Test
+	void 앱이_뜰_때_DB에_남은_마지막_결과를_불러온다() {
+		CollectorStatus saved = new CollectorStatus(CollectorMonitor.TIMETABLE);
+		saved.succeeded(NOW.minusSeconds(86400), 1719, Duration.ofSeconds(150));
+		statuses.save(saved);
+
+		monitor.loadFromDb();
+
+		assertThat(registry.get("bingang.collector.last.success").tag("collector", "timetable").gauge().value())
+			.isEqualTo(NOW.minusSeconds(86400).getEpochSecond());
+		assertThat(registry.get("bingang.collector.last.items").tag("collector", "timetable").gauge().value())
+			.isEqualTo(1719);
 	}
 
 	@Test

@@ -5,6 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterValidationResult;
@@ -94,8 +95,11 @@ public class 	GlobalExceptionHandler {
 		return toResponse(errorCode, List.of());
 	}
 
+	// 요청한 형식(예: Prometheus 텍스트)과 관계없이 오류는 항상 JSON으로 응답한다
 	private ResponseEntity<ErrorResponse> toResponse(ErrorCode errorCode, List<ValidationError> errors) {
-		return ResponseEntity.status(errorCode.getStatus()).body(ErrorResponse.of(errorCode, errors));
+		return ResponseEntity.status(errorCode.getStatus())
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(ErrorResponse.of(errorCode, errors));
 	}
 
 }
