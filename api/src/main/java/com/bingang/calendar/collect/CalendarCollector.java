@@ -2,8 +2,10 @@ package com.bingang.calendar.collect;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,6 +55,18 @@ public class CalendarCollector {
 			.stream()
 			.collect(Collectors.toMap(AcademicEvent::getSourceId, Function.identity()));
 
+		// 학교가 articleNo를 바꿔 재등록한 경우, 같은 내용의 이전 항목만 제거한다.
+		// 수집 범위 밖의 일정이나 원본에 없는 다른 일정은 보존한다.
+		Set<Long> sourceIds = items.stream().map(CalendarItem::sourceId).collect(Collectors.toSet());
+		Set<EventKey> incoming = items.stream()
+			.map(item -> new EventKey(item.startDate(), item.endDate(), item.title()))
+			.collect(Collectors.toSet());
+		List<AcademicEvent> obsolete = events.findAll().stream()
+			.filter(event -> !sourceIds.contains(event.getSourceId()))
+			.filter(event -> incoming.contains(new EventKey(event.getStartDate(), event.getEndDate(), event.getTitle())))
+			.toList();
+		events.deleteAll(obsolete);
+
 		int inserted = 0;
 		for (CalendarItem item : items) {
 			AcademicEvent event = existing.get(item.sourceId());
@@ -66,6 +80,9 @@ public class CalendarCollector {
 			}
 		}
 		return new Result(items.size(), inserted, items.size() - inserted);
+	}
+
+	private record EventKey(LocalDate startDate, LocalDate endDate, String title) {
 	}
 
 	public record Result(int total, int inserted, int updated) {

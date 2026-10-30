@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import java.time.DayOfWeek;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.core.io.ClassPathResource;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +64,66 @@ class CalendarCollectorTest {
 		assertThat(result).isEqualTo(new CalendarCollector.Result(7, 0, 7));
 		assertThat(events.count()).isEqualTo(7);
 		assertThat(events.findBySourceId(90003L).orElseThrow().getTitle()).isEqualTo("중간시험(변경)");
+	}
+
+	@Test
+	void 원본_ID가_변경되면_동일한_이전_일정만_제거한다() {
+		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture());
+		collector.collect();
+		em.flush();
+
+		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture().replace("90003", "99003"));
+		collector.collect();
+		em.flush();
+		em.clear();
+
+		assertThat(events.count()).isEqualTo(7);
+		assertThat(events.findBySourceId(90003L)).isEmpty();
+		assertThat(events.findBySourceId(99003L)).isPresent();
+		// 다시 수집해도 중복되지 않는다.
+		collector.collect();
+		assertThat(events.count()).isEqualTo(7);
+	}
+
+	@Test
+	void 수집_결과에_없는_다른_일정은_보존한다() {
+		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture());
+		collector.collect();
+		em.flush();
+
+		given(client.fetchHtml()).willReturn("<script>var calData = [" +
+			"{articleNo:99003,startDt:'2026-10-20',endDt:'2026-10-26',text:'별도 일정'}" +
+			"];</script>");
+		collector.collect();
+		em.flush();
+		em.clear();
+
+		assertThat(events.count()).isEqualTo(8);
+		assertThat(events.findBySourceId(90003L)).isPresent();
+	}
+
+	@Test
+	void 운영_정리_SQL은_확인된_중복만_제거한다() throws Exception {
+		em.createNativeQuery("""
+			insert into academic_event (source_id, start_date, end_date, title, fetched_at)
+			values (232276480, '2026-12-14', '2026-12-18', '기말시험', now()),
+			       (232290662, '2026-12-14', '2026-12-18', '기말시험', now()),
+			       (123, '2026-12-14', '2026-12-18', '기말시험', now()),
+			       (232276479, '2026-12-11', '2026-12-11', '다른 일정', now()),
+			       (232290661, '2026-12-11', '2026-12-11', '변경 일정', now())
+			""").executeUpdate();
+		String sql = new ClassPathResource("db/migration/V4__deduplicate_academic_events.sql")
+			.getContentAsString(StandardCharsets.UTF_8);
+		em.createNativeQuery(sql).executeUpdate();
+		em.clear();
+
+		assertThat(events.count()).isEqualTo(4);
+		assertThat(events.findBySourceId(232276480L)).isEmpty();
+		assertThat(events.findBySourceId(232290662L)).isPresent();
+		assertThat(events.findBySourceId(123L)).isPresent();
+		assertThat(events.findBySourceId(232276479L)).isPresent();
+		em.createNativeQuery(sql).executeUpdate();
+		assertThat(events.count()).isEqualTo(4);
 	}
 
 	@Test
