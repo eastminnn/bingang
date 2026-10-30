@@ -3,6 +3,12 @@
 
 encode zstd gzip
 
+# 접속 로그를 JSON으로 출력해 Loki로 모은다 (IP 포함, Loki 보관 기간 15일 뒤 삭제)
+log {
+	output stdout
+	format json
+}
+
 # API는 Spring Boot로 넘기고, 나머지는 정적 화면
 handle /api/* {
 	reverse_proxy api:8080
