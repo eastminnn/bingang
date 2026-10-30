@@ -64,6 +64,42 @@ class CalendarCollectorTest {
 	}
 
 	@Test
+	void 원본_ID가_변경되면_동일한_이전_일정만_제거한다() {
+		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture());
+		collector.collect();
+		em.flush();
+
+		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture().replace("90003", "99003"));
+		collector.collect();
+		em.flush();
+		em.clear();
+
+		assertThat(events.count()).isEqualTo(7);
+		assertThat(events.findBySourceId(90003L)).isEmpty();
+		assertThat(events.findBySourceId(99003L)).isPresent();
+		// 다시 수집해도 중복되지 않는다.
+		collector.collect();
+		assertThat(events.count()).isEqualTo(7);
+	}
+
+	@Test
+	void 수집_결과에_없는_다른_일정은_보존한다() {
+		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture());
+		collector.collect();
+		em.flush();
+
+		given(client.fetchHtml()).willReturn("<script>var calData = [" +
+			"{articleNo:99003,startDt:'2026-10-20',endDt:'2026-10-26',text:'별도 일정'}" +
+			"];</script>");
+		collector.collect();
+		em.flush();
+		em.clear();
+
+		assertThat(events.count()).isEqualTo(8);
+		assertThat(events.findBySourceId(90003L)).isPresent();
+	}
+
+	@Test
 	void 학교_페이지를_못_받으면_기존_데이터를_유지한다() {
 		given(client.fetchHtml()).willReturn(CalendarParserTest.fixture());
 		collector.collect();
