@@ -29,7 +29,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(sum by (ip, ua) (count_over_time({service=\"caddy\"} | json ip=\"request.client_ip\", ua=\"request.headers[\\\"User-Agent\\\"][0]\" | ua!~\"(?i).*(bingang-loadtest|curl|wget|bot|spider|crawl|python|go-http).*\" [5m])))",
+          "expr": "count(sum by (ip, ua) (count_over_time({service=\"caddy\"} | json ip=\"request.client_ip\", ua=\"request.headers[\\\"User-Agent\\\"][0]\" | ua!~\"(?i).*(bingang-loadtest|curl|wget|bot|spider|crawl|python|go-http).*\" [5m]))) or vector(0)",
           "queryType": "instant",
           "instant": true
         }
@@ -85,7 +85,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(sum by (ip, ua) (count_over_time({service=\"caddy\"} | json ip=\"request.client_ip\", ua=\"request.headers[\\\"User-Agent\\\"][0]\" | ua!~\"(?i).*(bingang-loadtest|curl|wget|bot|spider|crawl|python|go-http).*\" [24h])))",
+          "expr": "count(sum by (ip, ua) (count_over_time({service=\"caddy\"} | json ip=\"request.client_ip\", ua=\"request.headers[\\\"User-Agent\\\"][0]\" | ua!~\"(?i).*(bingang-loadtest|curl|wget|bot|spider|crawl|python|go-http).*\" [24h]))) or vector(0)",
           "queryType": "instant",
           "instant": true
         }
@@ -141,7 +141,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(sum by (ip, ua) (count_over_time({service=\"caddy\"} | json ip=\"request.client_ip\", ua=\"request.headers[\\\"User-Agent\\\"][0]\" | ua!~\"(?i).*(bingang-loadtest|curl|wget|bot|spider|crawl|python|go-http).*\" [7d])))",
+          "expr": "count(sum by (ip, ua) (count_over_time({service=\"caddy\"} | json ip=\"request.client_ip\", ua=\"request.headers[\\\"User-Agent\\\"][0]\" | ua!~\"(?i).*(bingang-loadtest|curl|wget|bot|spider|crawl|python|go-http).*\" [7d]))) or vector(0)",
           "queryType": "instant",
           "instant": true
         }
@@ -231,12 +231,14 @@
         "y": 4,
         "w": 12,
         "h": 8
-      }
+      },
+      "timeFrom": "30d",
+      "hideTimeOverride": false
     },
     {
       "type": "timeseries",
       "title": "시간대별 사용자",
-      "description": "1시간마다 고유 사용자 수. 쉬는 시간·점심 등 몰리는 시간을 본다",
+      "description": "1시간마다 고유 사용자 수. 쉬는 시간·점심 등 몰리는 시간을 본다. 진행 중인 시간은 그 시간이 끝나야 막대로 나온다",
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -282,7 +284,9 @@
         "y": 4,
         "w": 12,
         "h": 8
-      }
+      },
+      "timeFrom": "48h",
+      "hideTimeOverride": false
     },
     {
       "type": "bargauge",
