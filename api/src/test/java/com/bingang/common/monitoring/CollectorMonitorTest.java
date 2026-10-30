@@ -63,6 +63,8 @@ class CollectorMonitorTest {
 			.isEqualTo(NOW.getEpochSecond());
 		assertThat(registry.get("bingang.collector.last.items").tag("collector", "calendar").gauge().value())
 			.isEqualTo(67);
+		assertThat(registry.get("bingang.collector.last.duration").tag("collector", "calendar").gauge().value())
+			.isGreaterThanOrEqualTo(0);
 	}
 
 	@Test

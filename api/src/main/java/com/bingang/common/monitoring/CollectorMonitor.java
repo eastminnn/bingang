@@ -21,6 +21,7 @@ import io.micrometer.core.instrument.Timer;
  * <li>{@code bingang_collector_duration_seconds{collector, outcome}}: 실행 시간과 횟수</li>
  * <li>{@code bingang_collector_last_success_seconds{collector}}: 마지막 성공 시각(epoch 초), 없으면 0</li>
  * <li>{@code bingang_collector_last_items{collector}}: 마지막 성공 때 수집한 건수</li>
+ * <li>{@code bingang_collector_last_duration_seconds{collector}}: 마지막 실행에 걸린 시간</li>
  * </ul>
  */
 @Component
@@ -50,6 +51,12 @@ public class CollectorMonitor {
 			Gauge.builder("bingang.collector.last.items", () -> lastItems(name))
 				.tag("collector", name)
 				.description("마지막 성공 때 수집한 건수")
+				.register(registry);
+			// 하루·주 1회 실행이라 rate()로는 거의 비어 보여서 마지막 값을 따로 내보낸다
+			Gauge.builder("bingang.collector.last.duration", () -> lastDurationSeconds(name))
+				.tag("collector", name)
+				.baseUnit("seconds")
+				.description("마지막 실행에 걸린 시간")
 				.register(registry);
 		}
 	}
@@ -91,6 +98,13 @@ public class CollectorMonitor {
 			.map(CollectorStatus::getLastSuccessAt)
 			.map(Instant::getEpochSecond)
 			.orElse(0L);
+	}
+
+	private double lastDurationSeconds(String name) {
+		return statuses.findById(name)
+			.map(CollectorStatus::getLastDurationMs)
+			.map(ms -> ms / 1000.0)
+			.orElse(0.0);
 	}
 
 	private double lastItems(String name) {

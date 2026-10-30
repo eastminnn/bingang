@@ -1,0 +1,24 @@
+# 15초마다 각 대상의 지표를 가져온다. 대상은 모두 Compose 내부 네트워크에 있다
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["api:8080"]
+
+  # 서버 CPU·메모리·디스크
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # PostgreSQL 연결 수·DB 크기·트랜잭션
+  - job_name: postgres
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
