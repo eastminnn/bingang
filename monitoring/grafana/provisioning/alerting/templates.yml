@@ -1,4 +1,7 @@
-# 디스코드 메시지 모양: 🔴 발생 / ✅ 해결 + 규칙별 설명
+# 디스코드 메시지 모양
+#   장애: 🔴 + 요약, 확인할 것, 현재 값, 시작 시각
+#   해결: ✅ + 요약이 정상으로 돌아왔다는 것과 해결 시각만 (확인 안내는 필요 없음)
+# 시각은 컨테이너 시간대(TZ=Asia/Seoul) 기준
 apiVersion: 1
 templates:
   - orgId: 1
@@ -6,9 +9,12 @@ templates:
     template: |
       {{ define "bingang.title" }}{{ if eq .Status "firing" }}🔴 장애{{ else }}✅ 해결{{ end }} · {{ .CommonLabels.alertname }}{{ end }}
 
-      {{ define "bingang.message" }}{{ range .Alerts }}
+      {{ define "bingang.message" }}{{ range .Alerts.Firing }}
       **{{ .Annotations.summary }}**
       {{ .Annotations.description }}
       현재 값: {{ .Annotations.value }}
-      시작: {{ .StartsAt.Local.Format "01-02 15:04" }}{{ if eq .Status "resolved" }} · 해결: {{ .EndsAt.Local.Format "01-02 15:04" }}{{ end }}
+      시작: {{ .StartsAt.Local.Format "01-02 15:04" }}
+      {{ end }}{{ range .Alerts.Resolved }}
+      정상으로 돌아왔어요 ({{ .Labels.alertname }})
+      해결: {{ .EndsAt.Local.Format "01-02 15:04" }}
       {{ end }}{{ end }}

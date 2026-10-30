@@ -69,6 +69,8 @@ services:
     build: ./monitoring/grafana
     restart: unless-stopped
     environment:
+      # 알림 메시지의 시각을 한국 시간으로
+      TZ: Asia/Seoul
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD를 .env에 넣어 주세요}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
