@@ -40,6 +40,13 @@ erDiagram
         smallint substitute_day "보강일이면 적용할 요일, 아니면 NULL"
         timestamptz fetched_at
     }
+    collector_status {
+        varchar name PK "calendar, timetable"
+        timestamptz last_success_at
+        timestamptz last_failure_at
+        int last_items
+        bigint last_duration_ms
+    }
 ```
 
 ## 제약
@@ -56,4 +63,5 @@ erDiagram
 - `academic_event.substitute_day`는 수집할 때 `공휴일수업대체지정일(… (목) …)`을 해석해서 채운다. 판정할 때는 그 날짜에 값이 있으면 그 요일의 시간표를 쓴다.
 - `building.visible`: 시간표가 있어도 목록에서 뺄 건물(예: 중앙도서관)을 숨긴다.
 - `building`·`room`은 시간표 수집기가 빈강의실조회 응답(`ltDong`, `ltDongNm`, `ltRoomNo`, `admtRcnt`, `ltRoomNm`, `ltRoomType1`)으로 채운다. 건물 코드는 캠퍼스 지도가 아니라 학교 시스템 코드를 쓴다.
-- 스키마는 Flyway로 관리한다 (`V1__init.sql`, `V2__room_details.sql`).
+- `collector_status`: 수집기별 마지막 실행 결과. 앱을 다시 띄워도 모니터링 지표의 "마지막 성공 시각"이 유지되도록 DB에 둔다.
+- 스키마는 Flyway로 관리한다 (`V1__init.sql`, `V2__room_details.sql`, `V3__collector_status.sql`).
