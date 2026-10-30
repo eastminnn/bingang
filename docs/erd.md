@@ -65,3 +65,4 @@ erDiagram
 - `building`·`room`은 시간표 수집기가 빈강의실조회 응답(`ltDong`, `ltDongNm`, `ltRoomNo`, `admtRcnt`, `ltRoomNm`, `ltRoomType1`)으로 채운다. 건물 코드는 캠퍼스 지도가 아니라 학교 시스템 코드를 쓴다.
 - `collector_status`: 수집기별 마지막 실행 결과. 앱을 다시 띄워도 모니터링 지표의 "마지막 성공 시각"이 유지되도록 DB에 둔다.
 - 스키마는 Flyway로 관리한다 (`V1__init.sql`, `V2__room_details.sql`, `V3__collector_status.sql`).
+- `flyway_schema_history`는 Flyway가 마이그레이션 실행 기록을 남기는 관리용 테이블이라 ERD에서 제외한다.
