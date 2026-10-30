@@ -56,7 +56,7 @@
           "annotations": {
             "summary": "API가 응답하지 않아요",
             "description": "Prometheus가 2분 동안 api 지표를 가져오지 못했어요. 앱이 죽었거나 재시작을 반복하는지 docker compose ps, logs api를 확인하세요",
-            "value": "{{ humanize $values.A.Value }}"
+            "value": "{{ with $values.A }}{{ humanize .Value }}{{ end }}"
           },
           "labels": {
             "severity": "critical"
@@ -108,7 +108,7 @@
           "annotations": {
             "summary": "서버 p95가 200ms를 넘었어요",
             "description": "평소 약 5ms, 400 TPS에서도 8ms였어요 (#35). 대시보드에서 CPU, DB 커넥션 대기, GC를 같이 보세요",
-            "value": "{{ humanizeDuration $values.A.Value }}"
+            "value": "{{ with $values.A }}{{ humanizeDuration .Value }}{{ end }}"
           },
           "labels": {
             "severity": "warning"
@@ -160,7 +160,7 @@
           "annotations": {
             "summary": "서버 오류가 1%를 넘었어요",
             "description": "평소 0%예요. Grafana 로그 구역이나 Explore에서 {service=\"api\", level=\"ERROR\"}를 보세요",
-            "value": "{{ humanizePercentage $values.A.Value }}"
+            "value": "{{ with $values.A }}{{ humanizePercentage .Value }}{{ end }}"
           },
           "labels": {
             "severity": "critical"
@@ -212,7 +212,7 @@
           "annotations": {
             "summary": "5분 동안 api 에러 로그가 5줄을 넘었어요",
             "description": "5xx가 아니어도 수집기 실패나 예외가 쌓이고 있을 수 있어요. 로그에서 스택 트레이스를 확인하세요",
-            "value": "{{ humanize $values.A.Value }}"
+            "value": "{{ with $values.A }}{{ humanize .Value }}{{ end }}"
           },
           "labels": {
             "severity": "warning"
@@ -264,7 +264,7 @@
           "annotations": {
             "summary": "CPU 사용률이 85%를 넘은 채 10분이 지났어요",
             "description": "100 TPS에서 33%, 400 TPS에서 75%였어요 (#35). 트래픽 급증인지, 배포·수집 중인지 확인하세요",
-            "value": "{{ printf \"%.0f\" $values.A.Value }}%"
+            "value": "{{ with $values.A }}{{ printf \"%.0f\" .Value }}%{{ end }}"
           },
           "labels": {
             "severity": "warning"
@@ -316,7 +316,7 @@
           "annotations": {
             "summary": "디스크 사용률이 85%를 넘었어요",
             "description": "디스크가 차면 DB와 Prometheus가 멈춰요. docker image prune, docker system df로 정리하세요",
-            "value": "{{ printf \"%.0f\" $values.A.Value }}%"
+            "value": "{{ with $values.A }}{{ printf \"%.0f\" .Value }}%{{ end }}"
           },
           "labels": {
             "severity": "critical"
@@ -368,7 +368,7 @@
           "annotations": {
             "summary": "학사 일정이 26시간 넘게 수집되지 않았어요",
             "description": "매일 05:00 수집이에요. 보강일 판정이 낡은 데이터로 돌아가요. 로그에서 \"학사 일정 수집 실패\"를 찾아보세요",
-            "value": "{{ printf \"%.0f\" $values.A.Value }}시간 전"
+            "value": "{{ with $values.A }}{{ printf \"%.0f\" .Value }}시간 전{{ end }}"
           },
           "labels": {
             "severity": "warning"
@@ -420,7 +420,7 @@
           "annotations": {
             "summary": "시간표가 8일 넘게 수집되지 않았어요",
             "description": "매주 월 04:00 수집이에요. 학교 계정 비밀번호 만료, 학교 시스템 변경을 의심하세요",
-            "value": "{{ printf \"%.1f\" $values.A.Value }}일 전"
+            "value": "{{ with $values.A }}{{ printf \"%.1f\" .Value }}일 전{{ end }}"
           },
           "labels": {
             "severity": "critical"
@@ -472,7 +472,7 @@
           "annotations": {
             "summary": "{{ $labels.collector }} 수집이 실패했어요",
             "description": "기존 데이터는 그대로예요. 로그에서 원인을 보고, 다음 수집 때 회복되는지 확인하세요",
-            "value": "{{ humanize $values.A.Value }}"
+            "value": "{{ with $values.A }}{{ humanize .Value }}{{ end }}"
           },
           "labels": {
             "severity": "warning"
