@@ -1,0 +1,56 @@
+name: Load Test
+
+# 운영 서버에 부하를 거는 작업이라 직접 버튼을 눌렀을 때만 실행한다 (Actions → Load Test → Run workflow)
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "smoke 20초 · baseline 3분 · load 11분 · spike 4분 · stress 최대 8분 · soak 1시간"
+        type: choice
+        default: smoke
+        options: [smoke, baseline, load, spike, stress, soak]
+      base_url:
+        description: "테스트 대상"
+        default: https://bingang.duckdns.org
+
+concurrency:
+  group: loadtest
+  cancel-in-progress: false
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: k6 실행
+        env:
+          PROFILE: ${{ inputs.profile }}
+          BASE_URL: ${{ inputs.base_url }}
+        run: |
+          set -o pipefail
+          docker run --rm -u "$(id -u):$(id -g)" -v "$PWD/loadtest:/scripts" \
+            -e PROFILE -e BASE_URL grafana/k6:1.1.0 \
+            run --summary-export=/scripts/summary.json /scripts/scenario.js | tee loadtest/output.txt
+
+      - name: 결과 요약
+        if: always()
+        env:
+          PROFILE: ${{ inputs.profile }}
+        run: |
+          {
+            echo "## 부하 테스트: $PROFILE"
+            echo '```'
+            grep -E 'http_req_duration|http_req_failed|http_reqs|iterations|dropped|✓|✗' loadtest/output.txt || true
+            echo '```'
+            echo "서버 쪽 p95·CPU·DB 커넥션은 Grafana \"빈강 운영\" 대시보드에서 같은 시간대로 확인"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-${{ inputs.profile }}-${{ github.run_number }}
+          path: |
+            loadtest/output.txt
+            loadtest/summary.json
