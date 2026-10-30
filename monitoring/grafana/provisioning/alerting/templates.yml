@@ -1,0 +1,14 @@
+# 디스코드 메시지 모양: 🔴 발생 / ✅ 해결 + 규칙별 설명
+apiVersion: 1
+templates:
+  - orgId: 1
+    name: bingang
+    template: |
+      {{ define "bingang.title" }}{{ if eq .Status "firing" }}🔴 장애{{ else }}✅ 해결{{ end }} · {{ .CommonLabels.alertname }}{{ end }}
+
+      {{ define "bingang.message" }}{{ range .Alerts }}
+      **{{ .Annotations.summary }}**
+      {{ .Annotations.description }}
+      현재 값: {{ .Annotations.value }}
+      시작: {{ .StartsAt.Local.Format "01-02 15:04" }}{{ if eq .Status "resolved" }} · 해결: {{ .EndsAt.Local.Format "01-02 15:04" }}{{ end }}
+      {{ end }}{{ end }}

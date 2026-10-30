@@ -1,0 +1,484 @@
+# 알림 규칙 (1분마다 평가). 기준값은 부하 테스트 결과(#35)를 근거로 정했다
+#   API 다운 2분 · p95 200ms 5분 · 5xx 1% 5분 · 에러 로그 5줄/5분 · CPU 85% 10분 · 디스크 85%
+#   학사 일정 26시간 · 시간표 8일 · 수집 실패 1회
+{
+  "apiVersion": 1,
+  "groups": [
+    {
+      "orgId": 1,
+      "name": "빈강 운영",
+      "folder": "빈강",
+      "interval": "1m",
+      "rules": [
+        {
+          "uid": "api-down",
+          "title": "API 다운",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "up{job=\"api\"}",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "lt",
+                      "params": [
+                        1
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "Alerting",
+          "execErrState": "Error",
+          "for": "2m",
+          "annotations": {
+            "summary": "API가 응답하지 않아요",
+            "description": "Prometheus가 2분 동안 api 지표를 가져오지 못했어요. 앱이 죽었거나 재시작을 반복하는지 docker compose ps, logs api를 확인하세요",
+            "value": "{{ humanize $values.A.Value }}"
+          },
+          "labels": {
+            "severity": "critical"
+          }
+        },
+        {
+          "uid": "p95-slow",
+          "title": "응답 지연",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri!~\"/actuator.*\"}[5m])))",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        0.2
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "5m",
+          "annotations": {
+            "summary": "서버 p95가 200ms를 넘었어요",
+            "description": "평소 약 5ms, 400 TPS에서도 8ms였어요 (#35). 대시보드에서 CPU, DB 커넥션 대기, GC를 같이 보세요",
+            "value": "{{ humanizeDuration $values.A.Value }}"
+          },
+          "labels": {
+            "severity": "warning"
+          }
+        },
+        {
+          "uid": "error-rate",
+          "title": "5xx 에러",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[5m])), 1e-9)",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        0.01
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "5m",
+          "annotations": {
+            "summary": "서버 오류가 1%를 넘었어요",
+            "description": "평소 0%예요. Grafana 로그 구역이나 Explore에서 {service=\"api\", level=\"ERROR\"}를 보세요",
+            "value": "{{ humanizePercentage $values.A.Value }}"
+          },
+          "labels": {
+            "severity": "critical"
+          }
+        },
+        {
+          "uid": "error-logs",
+          "title": "에러 로그 급증",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "loki",
+              "model": {
+                "refId": "A",
+                "expr": "sum(count_over_time({service=\"api\", level=\"ERROR\"}[5m]))",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        5
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "0s",
+          "annotations": {
+            "summary": "5분 동안 api 에러 로그가 5줄을 넘었어요",
+            "description": "5xx가 아니어도 수집기 실패나 예외가 쌓이고 있을 수 있어요. 로그에서 스택 트레이스를 확인하세요",
+            "value": "{{ humanize $values.A.Value }}"
+          },
+          "labels": {
+            "severity": "warning"
+          }
+        },
+        {
+          "uid": "cpu-high",
+          "title": "CPU 과부하",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        85
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "10m",
+          "annotations": {
+            "summary": "CPU 사용률이 85%를 넘은 채 10분이 지났어요",
+            "description": "100 TPS에서 33%, 400 TPS에서 75%였어요 (#35). 트래픽 급증인지, 배포·수집 중인지 확인하세요",
+            "value": "{{ printf \"%.0f\" $values.A.Value }}%"
+          },
+          "labels": {
+            "severity": "warning"
+          }
+        },
+        {
+          "uid": "disk-high",
+          "title": "디스크 부족",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "100 * max(1 - node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"} / node_filesystem_size_bytes{fstype=~\"ext4|xfs\"})",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        85
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "5m",
+          "annotations": {
+            "summary": "디스크 사용률이 85%를 넘었어요",
+            "description": "디스크가 차면 DB와 Prometheus가 멈춰요. docker image prune, docker system df로 정리하세요",
+            "value": "{{ printf \"%.0f\" $values.A.Value }}%"
+          },
+          "labels": {
+            "severity": "critical"
+          }
+        },
+        {
+          "uid": "calendar-stale",
+          "title": "학사 일정 수집 지연",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "(time() - bingang_collector_last_success_seconds{collector=\"calendar\"}) / 3600 and bingang_collector_last_success_seconds{collector=\"calendar\"} > 0",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        26
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "0s",
+          "annotations": {
+            "summary": "학사 일정이 26시간 넘게 수집되지 않았어요",
+            "description": "매일 05:00 수집이에요. 보강일 판정이 낡은 데이터로 돌아가요. 로그에서 \"학사 일정 수집 실패\"를 찾아보세요",
+            "value": "{{ printf \"%.0f\" $values.A.Value }}시간 전"
+          },
+          "labels": {
+            "severity": "warning"
+          }
+        },
+        {
+          "uid": "timetable-stale",
+          "title": "시간표 수집 지연",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "(time() - bingang_collector_last_success_seconds{collector=\"timetable\"}) / 86400 and bingang_collector_last_success_seconds{collector=\"timetable\"} > 0",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        8
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "0s",
+          "annotations": {
+            "summary": "시간표가 8일 넘게 수집되지 않았어요",
+            "description": "매주 월 04:00 수집이에요. 학교 계정 비밀번호 만료, 학교 시스템 변경을 의심하세요",
+            "value": "{{ printf \"%.1f\" $values.A.Value }}일 전"
+          },
+          "labels": {
+            "severity": "critical"
+          }
+        },
+        {
+          "uid": "collector-failed",
+          "title": "수집 실패",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+              },
+              "datasourceUid": "prometheus",
+              "model": {
+                "refId": "A",
+                "expr": "sum by (collector) (increase(bingang_collector_duration_seconds_count{outcome=\"failure\"}[30m]))",
+                "instant": true,
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            },
+            {
+              "refId": "C",
+              "datasourceUid": "__expr__",
+              "model": {
+                "refId": "C",
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "type": "gt",
+                      "params": [
+                        0
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "for": "0s",
+          "annotations": {
+            "summary": "{{ $labels.collector }} 수집이 실패했어요",
+            "description": "기존 데이터는 그대로예요. 로그에서 원인을 보고, 다음 수집 때 회복되는지 확인하세요",
+            "value": "{{ humanize $values.A.Value }}"
+          },
+          "labels": {
+            "severity": "warning"
+          }
+        }
+      ]
+    }
+  ]
+}
