@@ -253,3 +253,7 @@ smoke로 시나리오 동작을 확인한 뒤 baseline → load → spike → st
 </details>
 
 [테스트 시나리오](loadtest/scenario.js) · [상세 결과 및 Grafana 캡처](loadtest/results/2026-10-30/README.md) · [측정 기록 #35](https://github.com/eastminnn/bingang/issues/35)
+
+## 라이선스
+
+직접 작성한 코드는 [MIT License](LICENSE)로 공개한다. 학교에서 수집한 시간표·학사일정 데이터와 외부 라이브러리·폰트 등 제3자 자료의 권리 및 이용 조건은 해당 권리자의 정책을 따른다.
