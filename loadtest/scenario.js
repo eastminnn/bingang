@@ -18,7 +18,7 @@ const PROFILES = {
 	smoke: { executor: 'constant-arrival-rate', rate: 5, timeUnit: '1s', duration: '20s' },
 	// 한가할 때의 기준값
 	baseline: { executor: 'constant-arrival-rate', rate: 10, timeUnit: '1s', duration: '3m' },
-	// SRS N-9 목표: 100 TPS에서 p95 200ms, 에러율 1% 미만
+	// 몰리는 순간(재학생 3만 명 기준 약 100 TPS)을 10분 유지. SRS N-9 목표 200 TPS는 stress 구간에서 확인
 	load: {
 		executor: 'ramping-arrival-rate', startRate: 10, timeUnit: '1s',
 		stages: [{ target: 100, duration: '1m' }, { target: 100, duration: '10m' }],
