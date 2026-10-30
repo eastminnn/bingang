@@ -50,7 +50,54 @@ services:
       - "80:80"
       - "443:443"
 
+  # ───── 모니터링: 모두 외부에 열지 않는다. Grafana·Prometheus는 SSH 터널로 접속 ─────
+  prometheus:
+    build: ./monitoring/prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  grafana:
+    build: ./monitoring/grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD를 .env에 넣어 주세요}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/bingang.json
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  # 서버 CPU·메모리·디스크 (컨테이너 안에서도 /proc의 CPU·메모리 값은 호스트 전체 기준)
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_URI: db:5432/${DB_NAME}?sslmode=disable
+      DATA_SOURCE_USER: ${DB_USER}
+      DATA_SOURCE_PASS: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-data:
   caddy-data:
   caddy-config:
+  prometheus-data:
+  grafana-data:

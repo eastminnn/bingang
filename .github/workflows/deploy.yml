@@ -54,7 +54,7 @@ jobs:
           git archive --format=tar HEAD | ssh -i ~/.ssh/deploy "$TARGET" '
             set -e
             cd ~/bingang
-            rm -rf api web docs design
+            rm -rf api web docs design monitoring
             tar -x -C .
             docker compose up -d --build --remove-orphans
             docker image prune -f
