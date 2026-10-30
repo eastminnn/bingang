@@ -8,15 +8,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bingang.building.entity.Building;
 import com.bingang.building.service.BuildingService;
 import com.bingang.common.config.ClockConfig;
+import com.bingang.common.monitoring.UsageMetrics;
 import com.bingang.room.dto.BuildingListResponse;
 import com.bingang.room.dto.BuildingListResponse.BuildingSummary;
 import com.bingang.room.dto.BuildingRoomsResponse;
@@ -33,11 +36,15 @@ public class RoomController {
 
 	private final AvailabilityService availabilityService;
 
+	private final UsageMetrics usageMetrics;
+
 	private final Clock clock;
 
-	public RoomController(BuildingService buildingService, AvailabilityService availabilityService, Clock clock) {
+	public RoomController(BuildingService buildingService, AvailabilityService availabilityService,
+			UsageMetrics usageMetrics, Clock clock) {
 		this.buildingService = buildingService;
 		this.availabilityService = availabilityService;
+		this.usageMetrics = usageMetrics;
 		this.clock = clock;
 	}
 
@@ -56,9 +63,12 @@ public class RoomController {
 
 	@GetMapping("/{code}/rooms")
 	public BuildingRoomsResponse rooms(@PathVariable String code,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime at) {
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime at,
+			@RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent) {
 		Building building = buildingService.getVisible(code);
-		return BuildingRoomsResponse.from(availabilityService.ofBuilding(building, resolve(at)));
+		BuildingRoomsResponse response = BuildingRoomsResponse.from(availabilityService.ofBuilding(building, resolve(at)));
+		usageMetrics.buildingViewed(building.getCode(), building.getName(), at != null, userAgent);
+		return response;
 	}
 
 	// at이 없으면 지금. 응답에 나노초까지 찍히지 않도록 초 단위로 자른다

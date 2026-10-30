@@ -1,5 +1,6 @@
 package com.bingang.room.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,6 +25,9 @@ import com.bingang.room.entity.RoomSchedule;
 import com.bingang.room.repository.RoomRepository;
 import com.bingang.room.repository.RoomScheduleRepository;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 @SpringBootTest(properties = { "bingang.calendar.enabled=false", "bingang.timetable.enabled=false" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -44,6 +48,9 @@ class RoomControllerTest {
 
 	@Autowired
 	RoomScheduleRepository schedules;
+
+	@Autowired
+	MeterRegistry registry;
 
 	@BeforeEach
 	void setUp() {
@@ -115,6 +122,28 @@ class RoomControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.at").exists())
 			.andExpect(jsonPath("$.rooms.length()").value(2));
+	}
+
+	@Test
+	void 건물_조회를_지금과_시간_변경으로_나눠_센다() throws Exception {
+		double now = views("B03", "now");
+		double scheduled = views("B03", "scheduled");
+
+		mvc.perform(get("/api/buildings/B03/rooms")).andExpect(status().isOk());
+		mvc.perform(get("/api/buildings/B03/rooms").param("at", WED_1110)).andExpect(status().isOk());
+		// 부하 테스트와 없는 건물은 세지 않는다
+		mvc.perform(get("/api/buildings/B03/rooms").header("User-Agent", "bingang-loadtest/1.0"))
+			.andExpect(status().isOk());
+		mvc.perform(get("/api/buildings/Z99/rooms")).andExpect(status().isNotFound());
+
+		assertThat(views("B03", "now")).isEqualTo(now + 1);
+		assertThat(views("B03", "scheduled")).isEqualTo(scheduled + 1);
+		assertThat(registry.find("bingang.building.views").tag("building", "Z99").counter()).isNull();
+	}
+
+	private double views(String building, String mode) {
+		Counter counter = registry.find("bingang.building.views").tags("building", building, "mode", mode).counter();
+		return counter == null ? 0 : counter.count();
 	}
 
 	@Test
