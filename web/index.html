@@ -81,6 +81,7 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 .bitem:active .bname{color:var(--muted)}
 .code{flex:none;width:32px;font-size:13px;color:var(--muted)}
 .bname{flex:1;font-size:17px}
+.access-notice{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 16px}
 .bcount{font-size:13px;color:var(--muted)}
 .bcount b{font-weight:600;color:var(--ink)}
 .bcount.zero b{color:var(--muted);font-weight:400}
@@ -199,6 +200,7 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
     </header>
     <div class="bhead"><span class="bcode num" id="bcode"></span><h2 id="bname"></h2></div>
 
+    <p class="access-notice" id="accessNotice" hidden>타 학과 출입 금지 · 약학관 이용 시 출입 규정을 확인해 주세요.</p>
     <div class="seg" id="days"></div>
     <div class="time">
       <button class="icon" id="minus" aria-label="30분 전"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
@@ -298,6 +300,8 @@ function paintStar(){const b=document.getElementById('bstar'),on=fav.has(st.code
 const byCode=c=>BUILDINGS.find(b=>b.code===c);
 const name=c=>byCode(c)?.name??c;
 
+const isRestrictedBuilding=b=>b.name==='약학관';
+
 /* ───── 건물 선택 화면 ───── */
 async function renderPick(force){
   const zones=document.getElementById('zones');
@@ -329,6 +333,7 @@ async function renderList(){
   const code=st.code, seq=++listSeq;
   document.getElementById('bcode').textContent=code;
   document.getElementById('bname').textContent=name(code);
+  document.getElementById('accessNotice').hidden=!isRestrictedBuilding({name:name(code)});
   paintStar();
   document.getElementById('days').innerHTML=
     `<button class="day ${st.live?'on':''}" onclick="setLive()">지금</button>`+
@@ -347,6 +352,7 @@ async function renderList(){
     document.getElementById('rooms').innerHTML=errorBox('강의실 정보를 불러오지 못했어요','renderList()');return}
   if(seq!==listSeq)return;          // 더 늦게 보낸 요청이 먼저 그려졌으면 버린다
   document.getElementById('bname').textContent=data.building.name;
+  document.getElementById('accessNotice').hidden=!isRestrictedBuilding(data.building);
 
   const all=data.rooms.map(r=>({...r,until:toMin(r.freeUntil),freeAt:toMin(r.freeAt),
     sess:r.sessions.map(([a,b])=>[toMin(a),toMin(b)])}));
