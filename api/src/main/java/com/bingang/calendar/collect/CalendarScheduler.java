@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.bingang.calendar.repository.AcademicEventRepository;
+import com.bingang.common.monitoring.CollectorMonitor;
 
 @Component
 @ConditionalOnProperty(name = "bingang.calendar.enabled", havingValue = "true", matchIfMissing = true)
@@ -20,9 +21,12 @@ public class CalendarScheduler {
 
 	private final AcademicEventRepository events;
 
-	public CalendarScheduler(CalendarCollector collector, AcademicEventRepository events) {
+	private final CollectorMonitor monitor;
+
+	public CalendarScheduler(CalendarCollector collector, AcademicEventRepository events, CollectorMonitor monitor) {
 		this.collector = collector;
 		this.events = events;
+		this.monitor = monitor;
 	}
 
 	@Scheduled(cron = "${bingang.calendar.cron}", zone = "Asia/Seoul")
@@ -40,7 +44,8 @@ public class CalendarScheduler {
 
 	private void run() {
 		try {
-			CalendarCollector.Result result = collector.collect();
+			CalendarCollector.Result result = monitor.run(CollectorMonitor.CALENDAR, collector::collect,
+					CalendarCollector.Result::total);
 			log.info("학사 일정 수집 완료: total={}, inserted={}, updated={}", result.total(), result.inserted(),
 					result.updated());
 		}

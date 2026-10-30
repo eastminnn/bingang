@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.bingang.common.monitoring.CollectorMonitor;
 import com.bingang.room.repository.RoomRepository;
 
 @Component
@@ -22,10 +23,14 @@ public class TimetableScheduler {
 
 	private final RoomRepository rooms;
 
-	public TimetableScheduler(TimetableCollector collector, YuPortalClient client, RoomRepository rooms) {
+	private final CollectorMonitor monitor;
+
+	public TimetableScheduler(TimetableCollector collector, YuPortalClient client, RoomRepository rooms,
+			CollectorMonitor monitor) {
 		this.collector = collector;
 		this.client = client;
 		this.rooms = rooms;
+		this.monitor = monitor;
 	}
 
 	@Scheduled(cron = "${bingang.timetable.cron}", zone = "Asia/Seoul")
@@ -47,7 +52,8 @@ public class TimetableScheduler {
 			return;
 		}
 		try {
-			TimetableCollector.Result result = collector.collect();
+			TimetableCollector.Result result = monitor.run(CollectorMonitor.TIMETABLE, collector::collect,
+					TimetableCollector.Result::sessions);
 			log.info("시간표 수집 완료: buildings={}, rooms={}, sessions={}, removedRooms={}, unusedRooms={}",
 					result.buildings(), result.rooms(), result.sessions(), result.removedRooms(), result.unusedRooms());
 		}
