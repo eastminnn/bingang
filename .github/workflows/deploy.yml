@@ -8,6 +8,7 @@ on:
       - "docs/**"
       - "design/**"
       - "loadtest/**"
+      - "monitoring/results/**"
       - ".github/workflows/loadtest.yml"
       - "**.md"
   workflow_dispatch:
