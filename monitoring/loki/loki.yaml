@@ -29,6 +29,8 @@ schema_config:
 
 limits_config:
   retention_period: 360h        # 15일
+  # 사용자 수 쿼리는 사용자(IP+User-Agent)마다 시계열을 하나씩 만든다. 기본 500이면 7일 사용자가 500명을 넘을 때 실패한다
+  max_query_series: 20000
 
 compactor:
   working_directory: /loki/compactor
