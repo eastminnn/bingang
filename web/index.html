@@ -303,11 +303,16 @@ const name=c=>byCode(c)?.name??c;
 const isRestrictedBuilding=b=>b.name==='약학관';
 
 /* ───── 건물 선택 화면 ───── */
+/* 검색은 대소문자·띄어쓰기를 무시하고, 학생들이 흔히 부르는 줄임말로도 찾는다 */
+const searchKey=s=>s.toLowerCase().replace(/\s+/g,'');
+const ALIASES={E21:'아이티 it',B05:'사과대 사회대',G07:'약대',A10:'음대 음악',A07:'미대 미술',A06:'미대 디자인',
+  A08:'사대 사범대',B02:'상대 상경대 경영 경제',G01:'생과대 생활대',G02:'생과대 생활대',
+  F26:'생명대 생명과학',F27:'생명대 생명과학',F28:'생명대 생명과학',F29:'생명대 생명과학',C02:'외교원 어학원'};
 async function renderPick(force){
   const zones=document.getElementById('zones');
   if(!BUILDINGS.length)zones.innerHTML='<p class="none">불러오는 중…</p>';
   try{await loadBuildings(force)}catch(e){zones.innerHTML=errorBox('건물 목록을 불러오지 못했어요','renderPick(true)');return}
-  const q=document.getElementById('q').value.trim().toLowerCase();
+  const q=searchKey(document.getElementById('q').value);
   const row=b=>{const c=esc(b.code), on=fav.has(b.code), cnt=b.freeRooms;
     return `<li class="brow"><button class="bitem" onclick="go('${c}')"><span class="code num">${c}</span>
       <span class="bname">${esc(b.name)}</span><span class="bcount num ${cnt?'':'zero'}">빈 강의실 <b>${cnt}</b></span></button>
@@ -319,7 +324,7 @@ async function renderPick(force){
   const rw=document.getElementById('recentWrap');
   rw.style.display=(rec.length&&!q)?'':'none';
   rw.innerHTML=rec.map(b=>`<button class="chip" onclick="go('${esc(b.code)}')"><span class="code num" style="width:auto">${esc(b.code)}</span>${esc(b.name)}</button>`).join('');
-  const hit=BUILDINGS.filter(b=>!q||b.code.toLowerCase().includes(q)||b.name.includes(q));
+  const hit=BUILDINGS.filter(b=>!q||searchKey(b.code+b.name+(ALIASES[b.code]||'')).includes(q));
   const groups={};hit.forEach(b=>(groups[b.zone]??=[]).push(b));
   zones.innerHTML=Object.keys(groups).sort().map(z=>
     `<div class="zone"><h3>${esc(z)}구역<span>${groups[z].length}곳</span></h3><ul class="bl">${groups[z].map(row).join('')}</ul></div>`).join('')
