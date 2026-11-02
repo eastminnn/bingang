@@ -61,6 +61,8 @@ jobs:
             tar -x -C .
             docker compose up -d --build --remove-orphans
             docker image prune -f
+            # 배포마다 쌓이는 빌드 캐시는 오래 안 쓴 것부터 지워 3GB 이하로 유지한다 (#57)
+            docker builder prune -f --max-used-space 3GB
           '
 
       - name: 헬스 체크
