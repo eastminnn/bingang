@@ -4,8 +4,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,20 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bingang.building.entity.Building;
 import com.bingang.building.service.BuildingService;
-import com.bingang.common.config.ClockConfig;
 import com.bingang.common.monitoring.UsageMetrics;
 import com.bingang.room.dto.BuildingListResponse;
-import com.bingang.room.dto.BuildingListResponse.BuildingSummary;
 import com.bingang.room.dto.BuildingRoomsResponse;
 import com.bingang.room.service.AvailabilityService;
-import com.bingang.room.service.RoomCount;
 
 @RestController
 @RequestMapping("/api/buildings")
 @RequiredArgsConstructor
 public class RoomController {
-
-	private static final RoomCount NO_ROOMS = new RoomCount(0, 0);
 
 	private final BuildingService buildingService;
 	private final AvailabilityService availabilityService;
@@ -43,13 +36,7 @@ public class RoomController {
 	public BuildingListResponse buildings(
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime at) {
 		Instant instant = resolve(at);
-		Map<Long, RoomCount> counts = availabilityService.roomCounts(instant);
-		List<BuildingSummary> summaries = buildingService.findVisible().stream().map(building -> {
-			RoomCount count = counts.getOrDefault(building.getId(), NO_ROOMS);
-			return new BuildingSummary(building.getCode(), building.getName(), building.getZone(), count.free(),
-					count.total());
-		}).toList();
-		return new BuildingListResponse(instant.atZone(ClockConfig.SEOUL).toOffsetDateTime(), summaries);
+		return BuildingListResponse.from(instant, buildingService.findVisible(), availabilityService.roomCounts(instant));
 	}
 
 	@GetMapping("/{code}/rooms")
