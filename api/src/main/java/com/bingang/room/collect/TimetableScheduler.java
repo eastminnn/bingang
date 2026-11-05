@@ -1,5 +1,6 @@
 package com.bingang.room.collect;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,25 +14,16 @@ import com.bingang.room.repository.RoomRepository;
 
 @Component
 @ConditionalOnProperty(name = "bingang.timetable.enabled", havingValue = "true", matchIfMissing = true)
+@RequiredArgsConstructor
 public class TimetableScheduler {
 
 	private static final Logger log = LoggerFactory.getLogger(TimetableScheduler.class);
 
 	private final TimetableCollector collector;
-
 	private final YuPortalClient client;
-
 	private final RoomRepository rooms;
-
 	private final CollectorMonitor monitor;
 
-	public TimetableScheduler(TimetableCollector collector, YuPortalClient client, RoomRepository rooms,
-			CollectorMonitor monitor) {
-		this.collector = collector;
-		this.client = client;
-		this.rooms = rooms;
-		this.monitor = monitor;
-	}
 
 	@Scheduled(cron = "${bingang.timetable.cron}", zone = "Asia/Seoul")
 	public void collectWeekly() {

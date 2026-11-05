@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import com.bingang.room.repository.RoomScheduleRepository;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class AvailabilityService {
 
 	// 호수는 숫자 크기 순서 (예: 105 < 201 < 1001), 숫자가 아니면 뒤에 문자열 순서
@@ -31,17 +33,8 @@ public class AvailabilityService {
 		.thenComparing(Room::getNumber);
 
 	private final RoomRepository rooms;
-
 	private final RoomScheduleRepository schedules;
-
 	private final AcademicCalendarService calendar;
-
-	public AvailabilityService(RoomRepository rooms, RoomScheduleRepository schedules,
-			AcademicCalendarService calendar) {
-		this.rooms = rooms;
-		this.schedules = schedules;
-		this.calendar = calendar;
-	}
 
 	public BuildingAvailability ofBuilding(Building building, Instant at) {
 		ZonedDateTime seoul = at.atZone(ClockConfig.SEOUL);

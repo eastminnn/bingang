@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,25 +29,15 @@ import com.bingang.room.service.RoomCount;
 
 @RestController
 @RequestMapping("/api/buildings")
+@RequiredArgsConstructor
 public class RoomController {
 
 	private static final RoomCount NO_ROOMS = new RoomCount(0, 0);
 
 	private final BuildingService buildingService;
-
 	private final AvailabilityService availabilityService;
-
 	private final UsageMetrics usageMetrics;
-
 	private final Clock clock;
-
-	public RoomController(BuildingService buildingService, AvailabilityService availabilityService,
-			UsageMetrics usageMetrics, Clock clock) {
-		this.buildingService = buildingService;
-		this.availabilityService = availabilityService;
-		this.usageMetrics = usageMetrics;
-		this.clock = clock;
-	}
 
 	@GetMapping
 	public BuildingListResponse buildings(
