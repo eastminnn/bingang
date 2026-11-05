@@ -9,8 +9,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AcademicEvent {
 
 	@Id
@@ -36,9 +41,6 @@ public class AcademicEvent {
 	@Column(nullable = false)
 	private Instant fetchedAt;
 
-	protected AcademicEvent() {
-	}
-
 	public AcademicEvent(Long sourceId, LocalDate startDate, LocalDate endDate, String title,
 			DayOfWeek substituteDay, Instant fetchedAt) {
 		this.sourceId = sourceId;
@@ -54,33 +56,4 @@ public class AcademicEvent {
 		this.substituteDay = substituteDay;
 		this.fetchedAt = fetchedAt;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public Long getSourceId() {
-		return sourceId;
-	}
-
-	public LocalDate getStartDate() {
-		return startDate;
-	}
-
-	public LocalDate getEndDate() {
-		return endDate;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public DayOfWeek getSubstituteDay() {
-		return substituteDay;
-	}
-
-	public Instant getFetchedAt() {
-		return fetchedAt;
-	}
-
 }

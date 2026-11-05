@@ -10,8 +10,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Room {
 
 	@Id
@@ -37,9 +42,6 @@ public class Room {
 	@Column(length = 50)
 	private String type;
 
-	protected Room() {
-	}
-
 	public Room(Building building, String number, Short floor) {
 		this.building = building;
 		this.number = number;
@@ -51,33 +53,4 @@ public class Room {
 		this.name = name;
 		this.type = type;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public Building getBuilding() {
-		return building;
-	}
-
-	public String getNumber() {
-		return number;
-	}
-
-	public Short getFloor() {
-		return floor;
-	}
-
-	public Integer getCapacity() {
-		return capacity;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getType() {
-		return type;
-	}
-
 }

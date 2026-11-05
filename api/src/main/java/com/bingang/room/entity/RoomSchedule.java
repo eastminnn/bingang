@@ -11,9 +11,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /** 강의실이 사용 중인 시간 한 칸 */
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RoomSchedule {
 
 	@Id
@@ -36,38 +41,10 @@ public class RoomSchedule {
 	@Column(length = 100)
 	private String label;
 
-	protected RoomSchedule() {
-	}
-
 	public RoomSchedule(Room room, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
 		this.room = room;
 		this.dayOfWeek = dayOfWeek;
 		this.startTime = startTime;
 		this.endTime = endTime;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public Room getRoom() {
-		return room;
-	}
-
-	public DayOfWeek getDayOfWeek() {
-		return dayOfWeek;
-	}
-
-	public LocalTime getStartTime() {
-		return startTime;
-	}
-
-	public LocalTime getEndTime() {
-		return endTime;
-	}
-
-	public String getLabel() {
-		return label;
-	}
-
 }

@@ -1,5 +1,6 @@
 package com.bingang.common.monitoring;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.Counter;
@@ -13,15 +14,12 @@ import io.micrometer.core.instrument.MeterRegistry;
  * 부하 테스트 요청(User-Agent bingang-loadtest)은 세지 않는다.
  */
 @Component
+@RequiredArgsConstructor
 public class UsageMetrics {
 
 	static final String LOADTEST_AGENT = "bingang-loadtest";
 
 	private final MeterRegistry registry;
-
-	public UsageMetrics(MeterRegistry registry) {
-		this.registry = registry;
-	}
 
 	public void buildingViewed(String buildingCode, String buildingName, boolean scheduled, String userAgent) {
 		if (userAgent != null && userAgent.contains(LOADTEST_AGENT)) {
