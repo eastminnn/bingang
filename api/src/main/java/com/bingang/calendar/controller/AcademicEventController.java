@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bingang.calendar.dto.AcademicEventListResponse;
-import com.bingang.calendar.dto.AcademicEventResponse;
 import com.bingang.calendar.service.AcademicCalendarService;
 
 @RestController
@@ -30,8 +29,7 @@ public class AcademicEventController {
 		LocalDate today = LocalDate.now(clock);
 		LocalDate start = from != null ? from : today.minusMonths(6);
 		LocalDate end = to != null ? to : today.plusMonths(6);
-		return new AcademicEventListResponse(start, end,
-				calendarService.findBetween(start, end).stream().map(AcademicEventResponse::from).toList());
+		return AcademicEventListResponse.from(start, end, calendarService.findBetween(start, end));
 	}
 
 }
