@@ -4,10 +4,14 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  # 블루-그린 (#63): 평소에는 한쪽만 떠 있어 다른 쪽은 up=0이다. 다운 판단은 max(up{job="api"})로 한다
   - job_name: api
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ["api:8080"]
+      - targets: ["api-blue:8080"]
+        labels: { color: blue }
+      - targets: ["api-green:8080"]
+        labels: { color: green }
 
   # 서버 CPU·메모리·디스크
   - job_name: node
