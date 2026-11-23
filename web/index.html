@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>빈강</title>
-<script>try{const t=localStorage.getItem('bingang.theme');if(t)document.documentElement.dataset.theme=t}catch{}</script>
+<script>try{const t=localStorage.getItem('bingang.theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('bingang.seen')==='1')document.documentElement.classList.add('seen')}catch{}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='7.5' height='15' rx='2.6' fill='%234f5bd5'/%3E%3Crect x='3' y='20' width='7.5' height='9' rx='2.6' fill='%234f5bd5' opacity='0.45'/%3E%3Crect x='12.25' y='3' width='7.5' height='7' rx='2.6' fill='%234f5bd5' opacity='0.45'/%3E%3Crect x='12.25' y='22' width='7.5' height='7' rx='2.6' fill='%234f5bd5'/%3E%3Crect x='21.5' y='3' width='7.5' height='9' rx='2.6' fill='%234f5bd5'/%3E%3Crect x='21.5' y='14' width='7.5' height='15' rx='2.6' fill='%234f5bd5' opacity='0.45'/%3E%3Ccircle cx='16' cy='16' r='2.2' fill='%2315a86b'/%3E%3C/svg%3E">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
 <style>
@@ -30,6 +30,7 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 /* ───────── 스플래시 ───────── */
 .splash{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:var(--bg);transition:opacity .4s ease}
 .splash.out{opacity:0;pointer-events:none}
+.seen .splash{display:none}
 .wrap{display:flex;flex-direction:column;align-items:center}
 .mark{display:grid;grid-template-columns:repeat(3,28px);grid-template-rows:repeat(4,22px);gap:5px;
       animation:lift .6s cubic-bezier(.65,0,.25,1) 1.5s forwards}
@@ -376,7 +377,7 @@ async function renderList(){
     if(r.floor!==floor){floor=r.floor;html+=`<div class="fl">${floor==null?'기타':floor+'층'}</div>`}
     const stt=r.busy
       ?`${hm(r.freeAt)}부터 비어요`
-      :(r.until==null?`${r.sess.length?'오늘 끝까지':'종일'} 비어 있음`:`${hm(r.until)}까지 비어 있어요<small>${dur(r.until-st.t)}</small>`);
+      :(r.until==null?`${r.sess.length?'오늘 끝까지':'종일'} 비어 있어요`:`${hm(r.until)}까지 비어 있어요<small>${dur(r.until-st.t)}</small>`);
     const segs=r.sess.map(([a,b])=>`<i class="x" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"></i>`).join('');
     const cur=r.busy?'':`<i class="f" style="left:${pct(st.t)}%;width:${pct(r.until??CLOSE)-pct(st.t)}%"></i>`;
     html+=`<div class="room ${r.busy?'busy':''}">
@@ -445,9 +446,11 @@ addEventListener('hashchange',route);
 document.getElementById('q').addEventListener('input',renderPick);
 setInterval(()=>{if(st.live&&document.visibilityState==='visible'&&location.hash)renderList()},60000);
 
-/* 첫 방문은 스플래시 전체, 이후엔 짧게 */
-let seen=false;try{seen=sessionStorage.getItem('bingang.seen')==='1';sessionStorage.setItem('bingang.seen','1')}catch{}
-playSplash(seen?1200:2600);
+/* 스플래시는 이 브라우저에서 처음 들어왔을 때 한 번만 (본 적 있으면 <head>에서 seen 클래스로 숨김) */
+if(!document.documentElement.classList.contains('seen')){
+  try{localStorage.setItem('bingang.seen','1')}catch{}
+  playSplash(2600);
+}
 route();
 </script>
 </body></html>
