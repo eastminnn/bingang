@@ -1,3 +1,8 @@
+# 종료할 때 열린 연결을 무한정 기다리지 않는다 (기본값은 무제한이라 Docker가 10초 뒤 강제 종료할 때까지 멈춰 있었다)
+{
+	grace_period 3s
+}
+
 # SITE_ADDRESS: 로컬은 :80(HTTP), 서버에서는 도메인을 넣으면 HTTPS 인증서를 자동으로 받는다
 {$SITE_ADDRESS}
 
@@ -10,8 +15,18 @@ log {
 }
 
 # API는 Spring Boot로 넘기고, 나머지는 정적 화면
+# 블루-그린 (#63): 두 색을 모두 등록하고 헬스 체크를 통과한 쪽으로만 보낸다 (배포 때 Caddy 설정을 바꾸지 않는다)
 handle /api/* {
-	reverse_proxy api:8080
+	reverse_proxy api-blue:8080 api-green:8080 {
+		# 2초마다 확인해 health가 UP인 쪽만 쓴다
+		health_uri /actuator/health
+		health_interval 2s
+		health_timeout 2s
+		# 고른 쪽이 꺼지는 중이라 연결이 거부되면 5초 안에 다른 쪽으로 다시 보낸다
+		lb_policy first
+		lb_try_duration 5s
+		lb_try_interval 250ms
+	}
 }
 
 handle {

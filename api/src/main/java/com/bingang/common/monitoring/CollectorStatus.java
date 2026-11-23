@@ -5,9 +5,14 @@ import java.time.Instant;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /** 수집기(calendar, timetable)의 마지막 실행 결과 */
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CollectorStatus {
 
 	@Id
@@ -20,9 +25,6 @@ public class CollectorStatus {
 	private Integer lastItems;
 
 	private Long lastDurationMs;
-
-	protected CollectorStatus() {
-	}
 
 	public CollectorStatus(String name) {
 		this.name = name;
@@ -38,25 +40,4 @@ public class CollectorStatus {
 		this.lastFailureAt = at;
 		this.lastDurationMs = duration.toMillis();
 	}
-
-	public String getName() {
-		return name;
-	}
-
-	public Instant getLastSuccessAt() {
-		return lastSuccessAt;
-	}
-
-	public Instant getLastFailureAt() {
-		return lastFailureAt;
-	}
-
-	public Integer getLastItems() {
-		return lastItems;
-	}
-
-	public Long getLastDurationMs() {
-		return lastDurationMs;
-	}
-
 }

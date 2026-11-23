@@ -1,5 +1,8 @@
 package com.bingang.building.entity;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -10,6 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Building {
 
 	@Id
@@ -31,9 +36,6 @@ public class Building {
 	@Column(nullable = false)
 	private boolean visible = true;
 
-	protected Building() {
-	}
-
 	public Building(String code, String name) {
 		this.code = code;
 		this.name = name;
@@ -51,25 +53,4 @@ public class Building {
 	public void updateVisibility(boolean visible) {
 		this.visible = visible;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getZone() {
-		return zone;
-	}
-
-	public boolean isVisible() {
-		return visible;
-	}
-
 }

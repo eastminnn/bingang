@@ -2,6 +2,7 @@ package com.bingang.building.service;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,13 +13,10 @@ import com.bingang.common.exception.error.ErrorCode;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class BuildingService {
 
 	private final BuildingRepository buildings;
-
-	public BuildingService(BuildingRepository buildings) {
-		this.buildings = buildings;
-	}
 
 	public List<Building> findVisible() {
 		return buildings.findByVisibleTrueOrderByCode();

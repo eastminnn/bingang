@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -16,26 +17,15 @@ import com.bingang.calendar.entity.AcademicEvent;
 import com.bingang.calendar.repository.AcademicEventRepository;
 
 @Service
+@RequiredArgsConstructor
 public class CalendarCollector {
 
 	private final YuCalendarClient client;
-
 	private final CalendarParser parser;
-
 	private final AcademicEventRepository events;
-
 	private final TransactionTemplate transaction;
-
 	private final Clock clock;
 
-	public CalendarCollector(YuCalendarClient client, CalendarParser parser, AcademicEventRepository events,
-			TransactionTemplate transaction, Clock clock) {
-		this.client = client;
-		this.parser = parser;
-		this.events = events;
-		this.transaction = transaction;
-		this.clock = clock;
-	}
 
 	/**
 	 * 학교 페이지를 받아 articleNo 기준으로 저장한다. 받기·해석에 실패하면 예외를 던지고 기존 데이터는 그대로 둔다.

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,15 +16,12 @@ import com.bingang.common.exception.error.ErrorCode;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class AcademicCalendarService {
 
 	private static final long MAX_RANGE_DAYS = 366;
 
 	private final AcademicEventRepository events;
-
-	public AcademicCalendarService(AcademicEventRepository events) {
-		this.events = events;
-	}
 
 	/** 그날 판정에 쓸 요일. 보강일이면 지정된 요일, 아니면 그날 요일 */
 	public DayOfWeek effectiveDayOf(LocalDate date) {

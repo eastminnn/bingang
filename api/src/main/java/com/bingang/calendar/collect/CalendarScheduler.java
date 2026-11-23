@@ -1,5 +1,6 @@
 package com.bingang.calendar.collect;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,21 +14,13 @@ import com.bingang.common.monitoring.CollectorMonitor;
 
 @Component
 @ConditionalOnProperty(name = "bingang.calendar.enabled", havingValue = "true", matchIfMissing = true)
+@RequiredArgsConstructor
 public class CalendarScheduler {
 
 	private static final Logger log = LoggerFactory.getLogger(CalendarScheduler.class);
-
 	private final CalendarCollector collector;
-
 	private final AcademicEventRepository events;
-
 	private final CollectorMonitor monitor;
-
-	public CalendarScheduler(CalendarCollector collector, AcademicEventRepository events, CollectorMonitor monitor) {
-		this.collector = collector;
-		this.events = events;
-		this.monitor = monitor;
-	}
 
 	@Scheduled(cron = "${bingang.calendar.cron}", zone = "Asia/Seoul")
 	public void collectDaily() {

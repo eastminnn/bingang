@@ -17,6 +17,19 @@ discovery.relabel "containers" {
     source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
     target_label  = "service"
   }
+  // 블루-그린 (#63): api-blue·api-green은 color 라벨로 구분하고 service는 api로 합친다
+  // 그래서 {service="api"}로 찾는 쿼리·알림을 바꾸지 않아도 되고, 전환 전후 로그가 이어진다
+  rule {
+    source_labels = ["service"]
+    regex         = "api-(blue|green)"
+    target_label  = "color"
+  }
+  rule {
+    source_labels = ["service"]
+    regex         = "api-(blue|green)"
+    target_label  = "service"
+    replacement   = "api"
+  }
 }
 
 loki.source.docker "containers" {
