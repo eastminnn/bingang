@@ -376,7 +376,7 @@ async function renderList(){
     if(r.floor!==floor){floor=r.floor;html+=`<div class="fl">${floor==null?'기타':floor+'층'}</div>`}
     const stt=r.busy
       ?`${hm(r.freeAt)}부터 비어요`
-      :(r.until==null?`${r.sess.length?'오늘 끝까지':'종일'} 비어 있음`:`${hm(r.until)}까지 비어 있어요<small>${dur(r.until-st.t)}</small>`);
+      :(r.until==null?`${r.sess.length?'오늘 끝까지':'종일'} 비어 있어요`:`${hm(r.until)}까지 비어 있어요<small>${dur(r.until-st.t)}</small>`);
     const segs=r.sess.map(([a,b])=>`<i class="x" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"></i>`).join('');
     const cur=r.busy?'':`<i class="f" style="left:${pct(st.t)}%;width:${pct(r.until??CLOSE)-pct(st.t)}%"></i>`;
     html+=`<div class="room ${r.busy?'busy':''}">
