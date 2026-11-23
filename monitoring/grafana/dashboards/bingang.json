@@ -227,7 +227,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "up{job=\"api\"}",
+          "expr": "max(up{job=\"api\"})",
           "instant": true
         }
       ],

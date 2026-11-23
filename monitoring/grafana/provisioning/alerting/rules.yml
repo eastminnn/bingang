@@ -24,7 +24,7 @@
               "datasourceUid": "prometheus",
               "model": {
                 "refId": "A",
-                "expr": "up{job=\"api\"}",
+                "expr": "max(up{job=\"api\"})",
                 "instant": true,
                 "intervalMs": 1000,
                 "maxDataPoints": 43200
@@ -55,7 +55,7 @@
           "for": "2m",
           "annotations": {
             "summary": "API가 응답하지 않아요",
-            "description": "Prometheus가 2분 동안 api 지표를 가져오지 못했어요. 앱이 죽었거나 재시작을 반복하는지 docker compose ps, logs api를 확인하세요",
+            "description": "Prometheus가 2분 동안 api-blue, api-green 어느 쪽에서도 지표를 가져오지 못했어요. 앱이 죽었거나 재시작을 반복하는지 docker compose ps, logs api-blue api-green을 확인하세요",
             "value": "{{ with $values.A }}{{ humanize .Value }}{{ end }}"
           },
           "labels": {

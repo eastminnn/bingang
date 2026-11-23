@@ -57,7 +57,7 @@ flowchart LR
     subgraph OCI["Oracle Cloud A1 · Docker Compose"]
         C["Caddy<br/>TLS 종료 · 압축 · 라우팅"]
         W["정적 화면<br/>index.html"]
-        A["Spring Boot API<br/>:8080"]
+        A["Spring Boot API<br/>api-blue · api-green"]
         D[("PostgreSQL 17")]
         C -- "/" --> W
         C -- "/api/*" --> A
@@ -67,9 +67,22 @@ flowchart LR
     LE["Let's Encrypt"] -. "인증서 자동 발급·갱신" .-> C
 ```
 
-- 외부에 열린 포트는 Caddy의 80·443뿐이다. API는 `127.0.0.1`에만 바인딩하고 DB는 Compose 내부 네트워크에만 둔다.
+- 외부에 열린 포트는 Caddy의 80·443뿐이다. API와 DB는 호스트 포트를 열지 않고 Compose 내부 네트워크에만 둔다.
 - 화면과 API를 같은 도메인에서 제공해 CORS 설정이 필요 없다.
 - 화면 파일과 Caddy 설정은 Caddy 이미지에 포함해, 서버의 저장소 폴더 상태와 무관하게 동작한다.
+
+### 배포 (블루-그린)
+
+main에 머지하면 GitHub Actions가 테스트 후 서버에서 `deploy.sh`를 실행한다 (#63).
+
+1. 이미지를 빌드하는 동안 지금 색(예: blue)이 계속 서비스한다.
+2. 반대 색(green)을 띄우고 `/actuator/health`가 healthy가 될 때까지 기다린다. 실패하면 green만 끄고 멈춘다. blue는 그대로 서비스한다.
+3. Caddy는 두 색을 모두 upstream으로 두고 2초마다 헬스 체크해 살아 있는 쪽으로만 보낸다. 배포할 때 Caddy 설정을 바꾸지 않는다.
+4. blue를 graceful shutdown으로 끈다. 다음 배포는 blue로 돌아온다.
+
+- 서비스 중인 색은 running이 아니라 **healthy**로 판단한다. 실패한 배포가 남긴 unhealthy 컨테이너를 서비스 중으로 착각하지 않게 하기 위해서다.
+- 빌드 출처 정보(attestation)를 끈다. 켜 두면 내용이 같아도 이미지 ID가 바뀌어 Caddy까지 매번 다시 만들어지고, 그동안 요청이 끊긴다.
+- Loki의 `service` 라벨은 `api`로 합치고 색은 `color` 라벨로 남겨, 기존 쿼리와 알림을 그대로 쓴다.
 
 ### 데이터 수집 흐름
 
@@ -328,7 +341,7 @@ Grafana가 1분마다 평가하고, 조건이 지정한 시간 동안 이어지�
 
 | 알림 | 조건 | 지속 | 기준을 정한 근거 |
 |---|---|---|---|
-| API 다운 | 지표 수집 실패 (`up == 0`) | 2분 | 배포 중 짧은 재시작은 거르고 실제 중단만 알림 |
+| API 다운 | blue·green 모두 지표 수집 실패 (`max(up) == 0`) | 2분 | 평소 한쪽 색은 꺼져 있어 `up == 0`이 정상이다. 둘 다 죽었을 때만 알림 |
 | 응답 지연 | 서버 p95 > 200ms | 5분 | 평소 약 5~12ms, 400 TPS에서도 8.1ms ([부하 테스트](#부하-테스트)) |
 | 5xx 오류 | 5xx 비율 > 1% | 5분 | 평소 0% |
 | 에러 로그 급증 | API ERROR 로그 > 5줄 / 5분 (Loki) | 즉시 | 5xx로 드러나지 않는 수집기 오류·예외 감지 |
