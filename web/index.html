@@ -83,6 +83,11 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 .code{flex:none;width:32px;font-size:13px;color:var(--muted)}
 .bname{flex:1;font-size:17px}
 .access-notice{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 16px}
+/* 시험 기간 배너 (#70) */
+.exam{margin:0 0 16px;padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.5;color:var(--ink);
+      background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.exam b{font-weight:600;color:var(--brand)}
+.exam small{display:block;font-size:13px;color:var(--sub)}
 .bcount{font-size:13px;color:var(--muted)}
 .bcount b{font-weight:600;color:var(--ink)}
 .bcount.zero b{color:var(--muted);font-weight:400}
@@ -178,6 +183,7 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
       <div class="logo"><svg class="lg" viewBox="0 0 32 32" aria-hidden="true"><use href="#logo"/></svg><span class="word">빈강</span></div>
       <div class="right"><button class="icon tgl" onclick="toggleTheme()" aria-label="다크 모드 전환"></button></div>
     </header>
+    <p class="exam" hidden></p>
     <label class="search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="건물 이름 또는 번호" autocomplete="off">
@@ -402,16 +408,22 @@ const dayMs=d=>Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10));
 const todayKST=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
 const md=d=>`${+d.slice(5,7)}.${+d.slice(8,10)}`;
 const wd=d=>WD[new Date(dayMs(d)).getUTCDay()];
-let EVENTS=null;
+let EVENTS=null, eventsReq=null;
+/* 학사 일정 탭과 시험 배너가 같이 쓴다. 실패하면 다음 호출 때 다시 요청한다 */
+function loadEvents(){
+  if(EVENTS)return Promise.resolve(EVENTS);
+  const t0=new Date(dayMs(todayKST()));
+  // 지난 두 달부터 앞으로 다섯 달: 이번 학기 남은 일정과 다음 학기 준비 일정
+  const from=new Date(t0-60*864e5).toISOString().slice(0,10), to=new Date(+t0+150*864e5).toISOString().slice(0,10);
+  return eventsReq??=api(`/api/academic-events?from=${from}&to=${to}`)
+    .then(r=>EVENTS=r.events.filter(e=>!/^학기개시일/.test(e.title)))   // 행정용 항목은 숨김
+    .finally(()=>eventsReq=null);
+}
 async function renderCal(){
   const body=document.getElementById('calBody');
   if(!EVENTS){
     body.innerHTML='<p class="none">불러오는 중…</p>';
-    const t0=new Date(dayMs(todayKST()));
-    // 지난 두 달부터 앞으로 다섯 달: 이번 학기 남은 일정과 다음 학기 준비 일정
-    const from=new Date(t0-60*864e5).toISOString().slice(0,10), to=new Date(+t0+150*864e5).toISOString().slice(0,10);
-    try{EVENTS=(await api(`/api/academic-events?from=${from}&to=${to}`)).events
-      .filter(e=>!/^학기개시일/.test(e.title))}            // 행정용 항목은 숨김
+    try{await loadEvents()}
     catch(e){body.innerHTML=errorBox('학사 일정을 불러오지 못했어요','renderCal()');return}
   }
   const t=dayMs(todayKST());
@@ -427,6 +439,23 @@ async function renderCal(){
   ev.forEach(e=>{const ym=e.a.slice(0,7);if(ym!==m){m=ym;html+=`<p class="month">${+ym.slice(5)}월</p>`}
     html+=`<div class="ev ${e.state}"><span class="dt num">${when(e)}<small>${wdays(e)}</small></span><span class="tt" title="${esc(e.raw)}">${esc(e.title)}</span><span class="dd num">${tag(e)}</span></div>`});
   body.innerHTML=html||'<p class="none">학사 일정이 없어요</p>';
+}
+
+/* ───── 시험 기간 배너 (#70): 시험 시작 7일 전부터 끝나는 날까지. 일정을 못 불러오면 그냥 숨긴다 ───── */
+async function renderExam(){
+  let html='';
+  try{
+    const t=dayMs(todayKST());
+    const ex=(await loadEvents()).find(e=>/시험/.test(e.title)&&dayMs(e.endDate)>=t&&dayMs(e.startDate)-7*864e5<=t);
+    if(ex){
+      const a=ex.startDate,b=ex.endDate,dd=Math.round((dayMs(a)-t)/864e5);
+      const span=`${md(a)}(${wd(a)}) – ${md(b)}(${wd(b)})`;
+      html=dd>0
+        ?`<b>${esc(ex.title)} D-${dd}</b> · <span class="num">${span}</span>`
+        :`<b>${esc(ex.title)} 기간이에요</b> · <span class="num">${span}</span><small>시험 때문에 시간표와 다르게 쓰는 강의실이 있을 수 있어요</small>`;
+    }
+  }catch{}
+  document.querySelectorAll('.exam').forEach(p=>{p.innerHTML=html;p.hidden=!html});
 }
 
 /* ───── 라우팅: #E21 → 빈 강의실, 없으면 건물 선택 ───── */
@@ -452,5 +481,6 @@ if(!document.documentElement.classList.contains('seen')){
   playSplash(2600);
 }
 route();
+renderExam();
 </script>
 </body></html>
