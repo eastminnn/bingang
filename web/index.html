@@ -529,12 +529,13 @@ async function renderCal(){
   body.innerHTML=html||'<p class="none">학사 일정이 없어요</p>';
 }
 
-/* ───── 시험 기간 배너 (#70): 시험 시작 7일 전부터 끝나는 날까지. 일정을 못 불러오면 그냥 숨긴다 ───── */
+/* ───── 시험 기간 배너 (#70): 시험 시작 4주 전부터 끝나는 날까지. 일정을 못 불러오면 그냥 숨긴다 ───── */
+const EXAM_LEAD_DAYS=28;
 async function renderExam(){
   let html='';
   try{
     const t=dayMs(todayKST());
-    const ex=(await loadEvents()).find(e=>/시험/.test(e.title)&&dayMs(e.endDate)>=t&&dayMs(e.startDate)-7*864e5<=t);
+    const ex=(await loadEvents()).find(e=>/시험/.test(e.title)&&dayMs(e.endDate)>=t&&dayMs(e.startDate)-EXAM_LEAD_DAYS*864e5<=t);
     if(ex){
       const a=ex.startDate,b=ex.endDate,dd=Math.round((dayMs(a)-t)/864e5);
       const span=`${md(a)}(${wd(a)}) – ${md(b)}(${wd(b)})`;
