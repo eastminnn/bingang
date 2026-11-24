@@ -31,5 +31,7 @@ handle /api/* {
 
 handle {
 	root * /srv
+	# .webmanifest는 기본 MIME 목록에 없을 수 있어 직접 지정한다 (PWA, #71)
+	header /manifest.webmanifest Content-Type application/manifest+json
 	file_server
 }

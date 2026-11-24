@@ -44,7 +44,12 @@
 | 시간 바꿔 보기 | 다른 요일·시각(30분 단위) 기준으로 미리 확인 |
 | 보강일 반영 | 공휴일 수업 대체일에는 지정된 요일의 시간표로 판정 |
 | 학사 일정 | 다음 일정, D-day, 보강일 제목 요약 |
+| 홈 화면에 추가 (PWA) | 아이콘으로 바로 열고 주소창 없이 앱처럼 사용 |
 | 기타 | 다크 모드, 로그인 없음 (즐겨찾기·테마는 브라우저에 저장) |
+
+**홈 화면에 추가하는 방법**
+- 안드로이드 Chrome: 메뉴(⋮) → `홈 화면에 추가` 또는 `앱 설치`
+- iPhone Safari: 공유 버튼 → `홈 화면에 추가`
 
 ## 시스템 아키텍처
 
@@ -170,7 +175,7 @@ bingang/
 │       ├── room/                 entity · repository · service(판정) · controller · dto · collect(시간표 수집)
 │       ├── calendar/             entity · repository · service · controller · dto · collect(학사 일정 수집)
 │       └── common/               config(Clock, 스케줄링) · exception(공통 오류 응답) · jpa
-├── web/                          화면(index.html), Caddy 이미지 Dockerfile
+├── web/                          화면(index.html), PWA(manifest.webmanifest, icons/), Caddy 이미지 Dockerfile
 ├── docs/                         요구사항 명세(srs.md), ERD(erd.md)
 ├── design/logo/                  로고
 ├── .github/                      이슈·PR 템플릿, 테스트·배포 워크플로
