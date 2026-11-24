@@ -1,6 +1,7 @@
 package com.bingang.common.monitoring;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.Counter;
@@ -15,12 +16,23 @@ import io.micrometer.core.instrument.MeterRegistry;
  * {@code bingang_ask_requests_total{result}}: 물어보기 요청 수. result는 ok / not_understood / limited / failed / unavailable
  */
 @Component
-@RequiredArgsConstructor
 public class UsageMetrics {
 
 	static final String LOADTEST_AGENT = "bingang-loadtest";
 
+	static final List<String> ASK_RESULTS = List.of("ok", "not_understood", "limited", "failed", "unavailable");
+
 	private final MeterRegistry registry;
+
+	/**
+	 * 물어보기 카운터는 시작할 때 결과마다 0으로 미리 만든다.
+	 * 첫 요청 때 1로 처음 생기면 Prometheus increase()가 0→1을 보지 못해 그 1건을 세지 않는다.
+	 * 요청이 적고 블루-그린 배포마다 카운터가 새로 생기므로, 미리 만들지 않으면 대시보드에서 대부분 빠진다
+	 */
+	public UsageMetrics(MeterRegistry registry) {
+		this.registry = registry;
+		ASK_RESULTS.forEach(result -> askCounter(result));
+	}
 
 	public void buildingViewed(String buildingCode, String buildingName, boolean scheduled, String userAgent) {
 		if (userAgent != null && userAgent.contains(LOADTEST_AGENT)) {
@@ -37,11 +49,14 @@ public class UsageMetrics {
 
 	// 질문 원문은 남기지 않고 결과 종류만 센다
 	public void asked(String result) {
-		Counter.builder("bingang.ask.requests")
+		askCounter(result).increment();
+	}
+
+	private Counter askCounter(String result) {
+		return Counter.builder("bingang.ask.requests")
 			.tag("result", result)
 			.description("물어보기 요청 수")
-			.register(registry)
-			.increment();
+			.register(registry);
 	}
 
 }
