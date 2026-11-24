@@ -18,7 +18,11 @@ public enum ErrorCode {
 	BUILDING_NOT_FOUND(HttpStatus.NOT_FOUND, "건물을 찾을 수 없습니다."),
 
 	// calendar
-	INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "조회 기간이 올바르지 않습니다. 시작일이 종료일보다 늦거나 1년을 넘었습니다.");
+	INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "조회 기간이 올바르지 않습니다. 시작일이 종료일보다 늦거나 1년을 넘었습니다."),
+
+	// ask
+	ASK_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "오늘 물어볼 수 있는 횟수를 다 썼어요. 내일 다시 이용해 주세요."),
+	ASK_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "지금은 답할 수 없어요. 빈 강의실 탭에서 직접 찾아 주세요.");
 
 	private final HttpStatus status;
 
