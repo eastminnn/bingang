@@ -16,6 +16,10 @@ x-api: &api
     YU_PASSWD: ${YU_PASSWD:-}
     TIMETABLE_YEAR: ${TIMETABLE_YEAR:-2026}
     TIMETABLE_SEMESTER_CODE: ${TIMETABLE_SEMESTER_CODE:-U0320021}
+    # 물어보기 (#74). 키가 없으면 물어보기만 꺼진다
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4-nano}
+    OPENAI_REASONING_EFFORT: ${OPENAI_REASONING_EFFORT-low}
   depends_on:
     db:
       condition: service_healthy

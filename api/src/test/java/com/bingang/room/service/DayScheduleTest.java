@@ -85,4 +85,36 @@ class DayScheduleTest {
 		assertThat(schedule.stateAt(LocalTime.of(18, 52)).freeUntil()).isEqualTo(LocalTime.of(18, 55));
 	}
 
+	@Test
+	void 구간과_겹치는_수업이_없으면_구간_내내_비어_있다() {
+		DaySchedule schedule = schedule(session("09:00", "10:15"), session("15:00", "16:30"));
+
+		// 수업이 끝나는 정각에 시작하고, 다음 수업이 시작하는 정각에 끝나는 구간은 비어 있다
+		assertThat(schedule.freeBetween(LocalTime.of(10, 15), LocalTime.of(15, 0))).isTrue();
+	}
+
+	@Test
+	void 구간_중간에_수업이_하나라도_걸치면_비어_있지_않다() {
+		DaySchedule schedule = schedule(session("14:00", "14:50"));
+
+		assertThat(schedule.freeBetween(LocalTime.of(13, 0), LocalTime.of(15, 0))).isFalse();
+		assertThat(schedule.freeBetween(LocalTime.of(14, 30), LocalTime.of(16, 0))).isFalse();
+		assertThat(schedule.freeBetween(LocalTime.of(13, 0), LocalTime.of(14, 1))).isFalse();
+	}
+
+	@Test
+	void 구간_안의_빈_시간대를_시간_순으로_돌려준다() {
+		DaySchedule schedule = schedule(session("08:00", "09:30"), session("12:00", "13:00"), session("13:00", "15:00"),
+				session("20:30", "22:00"));
+
+		assertThat(schedule.freeSlots(LocalTime.of(9, 0), LocalTime.of(21, 0)))
+			.containsExactly(session("09:30", "12:00"), session("15:00", "20:30"));
+	}
+
+	@Test
+	void 수업이_없으면_구간_전체가_빈_시간대다() {
+		assertThat(schedule().freeSlots(LocalTime.of(9, 0), LocalTime.of(21, 0)))
+			.containsExactly(session("09:00", "21:00"));
+	}
+
 }

@@ -1,7 +1,15 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>빈강</title>
-<script>try{const t=localStorage.getItem('bingang.theme');if(t)document.documentElement.dataset.theme=t}catch{}</script>
+<!-- 홈 화면에 추가 (#71): 안드로이드는 manifest, iOS는 apple-touch-icon·apple-mobile-web-app-* 를 읽는다 -->
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="빈강">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17171c" media="(prefers-color-scheme: dark)">
+<script>try{const t=localStorage.getItem('bingang.theme');if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem('bingang.seen')==='1')document.documentElement.classList.add('seen')}catch{}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='7.5' height='15' rx='2.6' fill='%234f5bd5'/%3E%3Crect x='3' y='20' width='7.5' height='9' rx='2.6' fill='%234f5bd5' opacity='0.45'/%3E%3Crect x='12.25' y='3' width='7.5' height='7' rx='2.6' fill='%234f5bd5' opacity='0.45'/%3E%3Crect x='12.25' y='22' width='7.5' height='7' rx='2.6' fill='%234f5bd5'/%3E%3Crect x='21.5' y='3' width='7.5' height='9' rx='2.6' fill='%234f5bd5'/%3E%3Crect x='21.5' y='14' width='7.5' height='15' rx='2.6' fill='%234f5bd5' opacity='0.45'/%3E%3Ccircle cx='16' cy='16' r='2.2' fill='%2315a86b'/%3E%3C/svg%3E">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
 <style>
@@ -30,6 +38,7 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 /* ───────── 스플래시 ───────── */
 .splash{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:var(--bg);transition:opacity .4s ease}
 .splash.out{opacity:0;pointer-events:none}
+.seen .splash{display:none}
 .wrap{display:flex;flex-direction:column;align-items:center}
 .mark{display:grid;grid-template-columns:repeat(3,28px);grid-template-rows:repeat(4,22px);gap:5px;
       animation:lift .6s cubic-bezier(.65,0,.25,1) 1.5s forwards}
@@ -82,6 +91,11 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 .code{flex:none;width:32px;font-size:13px;color:var(--muted)}
 .bname{flex:1;font-size:17px}
 .access-notice{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 16px}
+/* 시험 기간 배너 (#70) */
+.exam{margin:0 0 16px;padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.5;color:var(--ink);
+      background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.exam b{font-weight:600;color:var(--brand)}
+.exam small{display:block;font-size:13px;color:var(--sub)}
 .bcount{font-size:13px;color:var(--muted)}
 .bcount b{font-weight:600;color:var(--ink)}
 .bcount.zero b{color:var(--muted);font-weight:400}
@@ -135,9 +149,69 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 
 /* ───────── 하단 탭 ───────── */
 .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:5;
-      display:grid;grid-template-columns:1fr 1fr;padding-bottom:env(safe-area-inset-bottom);background:var(--bg);border-top:1px solid var(--line)}
+      display:grid;grid-template-columns:1fr 1fr 1fr;padding-bottom:env(safe-area-inset-bottom);background:var(--bg);border-top:1px solid var(--line)}
 .tab{height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:var(--faint)}
 .tab.on{color:var(--ink);font-weight:600}
+
+/* ───────── 물어보기 (#74) ───────── */
+.askf{position:relative;margin-top:16px}
+.askf input{width:100%;height:48px;border-radius:8px;border:0;background:var(--fill);padding:0 80px 0 16px;font-size:15px;outline:none}
+.askf .clr{position:absolute;right:44px;top:8px;width:32px;height:32px;display:grid;place-items:center;color:var(--muted)}
+.askf .clr[hidden]{display:none}
+#askBack[hidden],#askLogo[hidden]{display:none}
+.askf input::placeholder{color:var(--muted)}
+.askf #askBtn{position:absolute;right:8px;top:8px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+             background:var(--ink);color:var(--bg);transition:background .2s,color .2s,transform .1s}
+.askf #askBtn:active{transform:scale(.92)}
+.askf #askBtn.off,.askf #askBtn:disabled{background:var(--busy);color:var(--muted)}
+.hint{margin-top:24px}
+.hint h3,.ab h3{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:baseline;justify-content:space-between}
+.hint h3 button{font-size:13px;font-weight:400;color:var(--muted)}
+.exq{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;height:48px;border-bottom:1px solid var(--line);
+     text-align:left;font-size:15px;color:var(--ink)}
+.exq svg{flex:none;color:var(--faint)}
+.note{margin-top:24px;list-style:none;font-size:13px;line-height:1.6;color:var(--muted);word-break:keep-all}
+.note li{position:relative;padding-left:12px}
+.note li+li{margin-top:4px}
+.note li::before{content:'';position:absolute;left:2px;top:.75em;width:3px;height:3px;border-radius:50%;background:currentColor}
+/* 질문 말풍선 */
+.qb{display:flex;justify-content:flex-end;margin-top:24px}
+.qb p{max-width:85%;padding:8px 12px;border-radius:8px 8px 2px 8px;background:var(--fill);font-size:15px;line-height:1.5;word-break:keep-all}
+/* 로딩: 시간표 칸이 하나씩 초록으로 켜진다 */
+.think{margin-top:16px;display:flex;align-items:center;gap:12px}
+.cells{display:grid;grid-template-columns:repeat(4,8px);grid-template-rows:repeat(2,8px);gap:3px}
+.cells i{border-radius:2px;background:var(--busy);animation:cell 1.2s ease-in-out infinite}
+.cells i:nth-child(1){animation-delay:0s}.cells i:nth-child(2){animation-delay:.15s}.cells i:nth-child(3){animation-delay:.3s}
+.cells i:nth-child(4){animation-delay:.45s}.cells i:nth-child(8){animation-delay:.6s}.cells i:nth-child(7){animation-delay:.75s}
+.cells i:nth-child(6){animation-delay:.9s}.cells i:nth-child(5){animation-delay:1.05s}
+@keyframes cell{0%,100%{background:var(--busy)}30%{background:var(--free)}}
+.step{font-size:15px;color:var(--sub);transition:opacity .25s}
+.sk{margin-top:24px}
+.sk i{display:block;height:48px;border-radius:8px;margin-top:8px;
+      background:linear-gradient(90deg,var(--fill) 0%,var(--line) 50%,var(--fill) 100%);background-size:200% 100%;animation:shim 1.4s linear infinite}
+.sk i:first-child{height:72px;margin-top:0}
+@keyframes shim{to{background-position:-200% 0}}
+/* 결과 */
+.cond{margin-top:16px;padding:16px;border-radius:8px;background:var(--fill);animation:up .3s ease forwards;opacity:0;transform:translateY(6px)}
+.cond .when{font-size:22px;font-weight:600;letter-spacing:-.03em}
+.cond .where{font-size:15px;color:var(--sub);margin-top:4px}
+.cond .cnt{margin-top:12px;font-size:15px}
+.cond .cnt b{color:var(--free);font-weight:600}
+.ab{margin-top:24px;animation:up .3s ease forwards;opacity:0;transform:translateY(6px)}
+.ab h3{color:var(--ink);font-size:15px}
+.ab h3 span{font-size:13px;font-weight:400;color:var(--muted)}
+.ar{width:100%;display:flex;align-items:center;gap:8px;height:52px;border-bottom:1px solid var(--line);text-align:left}
+.ar .n{font-size:17px;font-weight:600}
+.ar small{font-size:13px;color:var(--muted)}
+.ar em{margin-left:auto;font-style:normal;font-size:15px;font-weight:600;color:var(--free)}
+.ar svg{flex:none;color:var(--faint)}
+/* 시간을 말하지 않았을 때: 둘째 줄에 그날 빈 시간대 */
+.ar.slots{height:auto;padding:10px 0;flex-wrap:wrap;row-gap:4px}
+.ar.slots .sl{order:3;width:100%;font-size:15px;font-weight:600;color:var(--free)}
+.ar.slots svg{margin-left:auto}
+.ar[hidden],.ab[hidden]{display:none}
+.more{width:100%;height:44px;font-size:13px;color:var(--sub)}
+@media (prefers-reduced-motion:reduce){.cells i,.sk i{animation:none}.cond,.ab{animation:none;opacity:1;transform:none}}
 
 /* ───────── 학사 일정 ───────── */
 .ttl{font-size:22px;font-weight:600;letter-spacing:-.03em;margin-top:8px}
@@ -177,6 +251,7 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
       <div class="logo"><svg class="lg" viewBox="0 0 32 32" aria-hidden="true"><use href="#logo"/></svg><span class="word">빈강</span></div>
       <div class="right"><button class="icon tgl" onclick="toggleTheme()" aria-label="다크 모드 전환"></button></div>
     </header>
+    <p class="exam" hidden></p>
     <label class="search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="건물 이름 또는 번호" autocomplete="off">
@@ -213,7 +288,25 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
     <div id="rooms"></div>
   </section>
 
-  <!-- 3. 학사 일정 -->
+  <!-- 3. 물어보기 (#74): 말로 물으면 그 시간 내내 비는 강의실 -->
+  <section class="screen" id="ask">
+    <header class="top">
+      <button class="icon back" id="askBack" onclick="askHome()" aria-label="처음으로" hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="logo" id="askLogo"><svg class="lg" viewBox="0 0 32 32" aria-hidden="true"><use href="#logo"/></svg><span class="word">빈강</span></div>
+      <div class="right"><button class="icon tgl" onclick="toggleTheme()" aria-label="다크 모드 전환"></button></div>
+    </header>
+    <h2 class="ttl">물어보기</h2><p>언제, 어디서 공부할지 말로 물어보세요</p>
+    <form class="askf" id="askForm">
+      <input id="askQ" type="text" maxlength="100" placeholder="예: 목요일 1시부터 3시까지 IT관" autocomplete="off" enterkeyhint="search" aria-label="질문">
+      <button class="clr" id="askClr" type="button" aria-label="지우기" hidden><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".35"/><path d="m9 9 6 6m0-6-6 6" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button id="askBtn" class="off" aria-label="찾기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </form>
+    <div id="askBody"></div>
+  </section>
+
+  <!-- 4. 학사 일정 -->
   <section class="screen" id="cal">
     <header class="top">
       <div class="logo"><svg class="lg" viewBox="0 0 32 32" aria-hidden="true"><use href="#logo"/></svg><span class="word">빈강</span></div>
@@ -227,6 +320,8 @@ button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:trans
 <nav class="tabs">
   <button class="tab" id="tabRooms" onclick="go(st.code||'')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21"/><circle cx="14.5" cy="12.5" r=".9" fill="currentColor"/></svg>빈 강의실</button>
+  <button class="tab" id="tabAsk" onclick="go('ask')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.62 19.25A8 8 0 1 0 4.75 15.38L3.5 20.5Z"/><path d="M12 9l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z" fill="currentColor" stroke="none"/></svg>물어보기</button>
   <button class="tab" id="tabCal" onclick="go('cal')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>학사 일정</button>
 </nav>
@@ -376,7 +471,7 @@ async function renderList(){
     if(r.floor!==floor){floor=r.floor;html+=`<div class="fl">${floor==null?'기타':floor+'층'}</div>`}
     const stt=r.busy
       ?`${hm(r.freeAt)}부터 비어요`
-      :(r.until==null?`${r.sess.length?'오늘 끝까지':'종일'} 비어 있음`:`${hm(r.until)}까지 비어 있어요<small>${dur(r.until-st.t)}</small>`);
+      :(r.until==null?`${r.sess.length?'오늘 끝까지':'종일'} 비어 있어요`:`${hm(r.until)}까지 비어 있어요<small>${dur(r.until-st.t)}</small>`);
     const segs=r.sess.map(([a,b])=>`<i class="x" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"></i>`).join('');
     const cur=r.busy?'':`<i class="f" style="left:${pct(st.t)}%;width:${pct(r.until??CLOSE)-pct(st.t)}%"></i>`;
     html+=`<div class="room ${r.busy?'busy':''}">
@@ -401,16 +496,22 @@ const dayMs=d=>Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10));
 const todayKST=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
 const md=d=>`${+d.slice(5,7)}.${+d.slice(8,10)}`;
 const wd=d=>WD[new Date(dayMs(d)).getUTCDay()];
-let EVENTS=null;
+let EVENTS=null, eventsReq=null;
+/* 학사 일정 탭과 시험 배너가 같이 쓴다. 실패하면 다음 호출 때 다시 요청한다 */
+function loadEvents(){
+  if(EVENTS)return Promise.resolve(EVENTS);
+  const t0=new Date(dayMs(todayKST()));
+  // 지난 두 달부터 앞으로 다섯 달: 이번 학기 남은 일정과 다음 학기 준비 일정
+  const from=new Date(t0-60*864e5).toISOString().slice(0,10), to=new Date(+t0+150*864e5).toISOString().slice(0,10);
+  return eventsReq??=api(`/api/academic-events?from=${from}&to=${to}`)
+    .then(r=>EVENTS=r.events.filter(e=>!/^학기개시일/.test(e.title)))   // 행정용 항목은 숨김
+    .finally(()=>eventsReq=null);
+}
 async function renderCal(){
   const body=document.getElementById('calBody');
   if(!EVENTS){
     body.innerHTML='<p class="none">불러오는 중…</p>';
-    const t0=new Date(dayMs(todayKST()));
-    // 지난 두 달부터 앞으로 다섯 달: 이번 학기 남은 일정과 다음 학기 준비 일정
-    const from=new Date(t0-60*864e5).toISOString().slice(0,10), to=new Date(+t0+150*864e5).toISOString().slice(0,10);
-    try{EVENTS=(await api(`/api/academic-events?from=${from}&to=${to}`)).events
-      .filter(e=>!/^학기개시일/.test(e.title))}            // 행정용 항목은 숨김
+    try{await loadEvents()}
     catch(e){body.innerHTML=errorBox('학사 일정을 불러오지 못했어요','renderCal()');return}
   }
   const t=dayMs(todayKST());
@@ -428,16 +529,146 @@ async function renderCal(){
   body.innerHTML=html||'<p class="none">학사 일정이 없어요</p>';
 }
 
-/* ───── 라우팅: #E21 → 빈 강의실, 없으면 건물 선택 ───── */
+/* ───── 시험 기간 배너 (#70): 시험 시작 7일 전부터 끝나는 날까지. 일정을 못 불러오면 그냥 숨긴다 ───── */
+async function renderExam(){
+  let html='';
+  try{
+    const t=dayMs(todayKST());
+    const ex=(await loadEvents()).find(e=>/시험/.test(e.title)&&dayMs(e.endDate)>=t&&dayMs(e.startDate)-7*864e5<=t);
+    if(ex){
+      const a=ex.startDate,b=ex.endDate,dd=Math.round((dayMs(a)-t)/864e5);
+      const span=`${md(a)}(${wd(a)}) – ${md(b)}(${wd(b)})`;
+      html=dd>0
+        ?`<b>${esc(ex.title)} D-${dd}</b> · <span class="num">${span}</span>`
+        :`<b>${esc(ex.title)} 기간이에요</b> · <span class="num">${span}</span><small>시험 때문에 시간표와 다르게 쓰는 강의실이 있을 수 있어요</small>`;
+    }
+  }catch{}
+  document.querySelectorAll('.exam').forEach(p=>{p.innerHTML=html;p.hidden=!html});
+}
+
+/* ───── 물어보기 (#74) ───── */
+const ASK_EX=['목요일 1시부터 3시까지 IT관','내일 오전에 상경관','지금부터 2시간 인문관','금요일 저녁'];
+const CHEV='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+// 최근 질문은 이 브라우저에만 저장한다 (서버에는 남기지 않음)
+// 예시 질문을 눌러 물은 것은 최근 질문에 넣지 않는다 (예시 목록에 그대로 남는다)
+const recentQ={get:()=>list('bingang.askRecent').filter(x=>!ASK_EX.includes(x)),
+  add:q=>{if(!ASK_EX.includes(q))save('bingang.askRecent',[q,...recentQ.get().filter(x=>x!==q)].slice(0,3))},
+  clear:()=>{save('bingang.askRecent',[]);renderAskHome()}};
+let jump=null, askSeq=0;                          // jump: 결과에서 강의실을 누르면 그 건물을 물어본 요일·시각으로 연다
+const qRow=q=>`<button class="exq" type="button" onclick="askWith(this.dataset.q)" data-q="${esc(q)}"><span>${esc(q)}</span>${CHEV}</button>`;
+function renderAskHome(){
+  const rec=recentQ.get();
+  document.getElementById('askBody').innerHTML=
+    (rec.length?`<div class="hint"><h3>최근 질문<button type="button" onclick="recentQ.clear()">지우기</button></h3>${rec.map(qRow).join('')}</div>`:'')+
+    `<div class="hint"><h3>이렇게 물어보세요</h3>${ASK_EX.map(qRow).join('')}</div>
+     <ul class="note"><li>요일, 시간, 건물을 말하면 그 시간 내내 비어 있는 강의실을 찾아요.</li>
+       <li>AI는 질문만 읽고, 비어 있는지는 강의 시간표로 판단해요.</li><li>하루 20번까지 물어볼 수 있어요.</li></ul>`;
+}
+function askWith(q){document.getElementById('askQ').value=q;syncClr();ask()}
+/* 결과를 보여 줄 때 기록을 하나 쌓아, 휴대폰 뒤로 가기·헤더 뒤로 버튼으로 처음 화면에 돌아온다 */
+let askShown=false;
+function showAskResult(html){
+  document.getElementById('askBody').innerHTML=html;
+  if(!askShown){askShown=true;history.pushState({ask:'result'},'')}
+  document.getElementById('askBack').hidden=false;document.getElementById('askLogo').hidden=true;
+}
+function resetAsk(){
+  askShown=false;askSeq++;document.getElementById('askBtn').disabled=false;
+  document.getElementById('askBack').hidden=true;document.getElementById('askLogo').hidden=false;
+  const q=document.getElementById('askQ');q.value='';syncClr();renderAskHome();scrollTo(0,0);
+}
+function askHome(){if(history.state?.ask==='result')history.back();else resetAsk()}
+addEventListener('popstate',()=>{if(askShown&&location.hash.toUpperCase()==='#ASK'&&history.state?.ask!=='result')resetAsk()});
+function syncClr(){const v=!!document.getElementById('askQ').value.trim();
+  document.getElementById('askClr').hidden=!document.getElementById('askQ').value;document.getElementById('askBtn').classList.toggle('off',!v)}
+document.getElementById('askQ').addEventListener('input',syncClr);
+document.getElementById('askClr').addEventListener('click',()=>{const q=document.getElementById('askQ');q.value='';syncClr();q.focus()});
+function openAt(code,dow,t){jump={day:dow-1,t};go(code)}
+function thinking(q){
+  const body=document.getElementById('askBody');
+  body.innerHTML=`<div class="qb"><p>${esc(q)}</p></div>
+    <div class="think" role="status"><div class="cells" aria-hidden="true">${'<i></i>'.repeat(8)}</div><span class="step" id="askStep">질문을 읽고 있어요</span></div>
+    <div class="sk" aria-hidden="true"><i></i><i></i><i></i><i></i></div>`;
+  const steps=['질문을 읽고 있어요','요일과 시간을 정리하고 있어요','시간표에서 빈 강의실을 찾고 있어요','거의 다 찾았어요'];
+  let k=0;const seq=askSeq;
+  const timer=setInterval(()=>{const el=document.getElementById('askStep');
+    if(!el||seq!==askSeq||k>=steps.length-1){clearInterval(timer);return}
+    el.style.opacity=0;setTimeout(()=>{el.textContent=steps[++k];el.style.opacity=1},250)},1100);
+  return()=>clearInterval(timer);
+}
+async function ask(){
+  const input=document.getElementById('askQ'), q=input.value.trim(), btn=document.getElementById('askBtn');
+  if(!q){input.focus();return}
+  const seq=++askSeq; btn.disabled=true; const stop=thinking(q);
+  if(!askShown){askShown=true;history.pushState({ask:'result'},'');document.getElementById('askBack').hidden=false;document.getElementById('askLogo').hidden=true}
+  const qb=`<div class="qb"><p>${esc(q)}</p></div>`;
+  let html;
+  try{
+    const res=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({question:q})});
+    const r=await res.json().catch(()=>null);
+    if(!res.ok)throw new Error(r?.errors?.[0]?.message||r?.message||'요청에 실패했어요');
+    recentQ.add(q);
+    html=qb+(r.understood?askResult(r):askRejected(r.reason));
+  }catch(e){html=qb+`<div class="emptyst"><p>${esc(e.message)}</p><button class="chip" onclick="askWith(this.dataset.q)" data-q="${esc(q)}">다시 시도</button></div>`}
+  finally{stop();if(seq===askSeq)btn.disabled=false}
+  if(seq===askSeq){showAskResult(html);input.blur()}
+}
+// 답하지 못한 이유별 안내 (서버 reason)
+const ASK_WHY={
+  OUT_OF_HOURS:['강의실은 09:00~21:00 사이만 찾을 수 있어요','그 안의 시간으로 다시 물어봐 주세요'],
+  OUT_OF_RANGE:['오늘부터 2주 안의 날짜만 찾을 수 있어요','시간표가 바뀔 수 있어서 가까운 날만 찾아요'],
+  INVALID_TIME:['시작 시각이 끝 시각보다 늦어요','예: 1시부터 3시까지'],
+  NOT_ROOM_QUESTION:['빈 강의실을 찾는 질문으로 물어봐 주세요','요일, 시간, 건물을 넣어 보세요']};
+function askRejected(reason){
+  const [t,sub]=ASK_WHY[reason]||ASK_WHY.NOT_ROOM_QUESTION;
+  return `<div class="emptyst"><p>${t}</p>${sub}</div>`+(reason==='NOT_ROOM_QUESTION'||!ASK_WHY[reason]?ASK_EX.slice(0,2).map(qRow).join(''):'');
+}
+const ASK_FOLD=5, ASK_FOLD_B=6;                    // 처음에는 건물마다 강의실 5곳, 건물은 6곳까지만
+function askResult(r){
+  const c=r.condition, total=BUILDINGS.length;
+  const where=c.buildings.length&&c.buildings.length<total?r.buildings.map(b=>b.name).join(', '):'전체 건물';
+  // 즐겨찾기 건물 먼저, 그다음 빈 강의실이 많은 순
+  const hit=r.buildings.filter(b=>b.rooms.length).sort((a,b)=>(fav.has(b.code)-fav.has(a.code))||(b.rooms.length-a.rooms.length));
+  const n=hit.reduce((a,b)=>a+b.rooms.length,0);
+  // 보강일이면 실제 요일(dayOfWeek)로 판정되므로 강의실 화면도 그 요일로 연다. 토·일은 강의실 화면에 없어 이동하지 않는다
+  const canJump=c.dayOfWeek<=5, t=toMin(c.start);
+  const day=`${md(c.date)}(${WD[c.dayOfWeek%7]})`;
+  let html=`<div class="cond"><div class="when num">${day} ${c.wholeDay?'하루':`${c.start}–${c.end}`}</div>
+    <div class="where">${esc(where)}</div><div class="cnt">${c.wholeDay?'1시간 이상 비는 강의실':'이 시간 내내 비어 있는 강의실'} <b class="num">${n}곳</b></div></div>`;
+  if(!n)return html+(c.wholeDay?'<div class="emptyst"><p>그날 1시간 이상 비는 곳이 없어요</p>다른 요일이나 건물로 물어보세요</div>'
+    :'<div class="emptyst"><p>그 시간 내내 비어 있는 곳이 없어요</p>시간을 줄이거나 다른 건물로 물어보세요</div>');
+  hit.forEach((b,bi)=>{
+    const meta=rm=>`<span class="n num">${esc(rm.number)}</span><small>${rm.floor!=null?rm.floor+'층':''}${rm.capacity?` · ${rm.capacity}석`:''}</small>`;
+    // 하루 모드는 첫 빈 시간대 시작으로, 아니면 물어본 시작 시각으로 건물 화면을 연다
+    const tap=rm=>canJump?`onclick="openAt('${esc(b.code)}',${c.dayOfWeek},${c.wholeDay?toMin(rm.freeSlots[0][0]):t})"`:'';
+    const rows=b.rooms.map((rm,i)=>c.wholeDay
+      ?`<button class="ar slots" ${i>=ASK_FOLD?'hidden':''} ${tap(rm)}>${meta(rm)}${canJump?CHEV:''}
+         <span class="sl num">${rm.freeSlots.map(([a,z])=>`${a}–${z}`).join(', ')}</span></button>`
+      :`<button class="ar" ${i>=ASK_FOLD?'hidden':''} ${tap(rm)}>${meta(rm)}
+         <em>${rm.freeUntil?`<span class="num">${rm.freeUntil}</span>까지`:'끝까지'}</em>${canJump?CHEV:''}</button>`).join('');
+    const more=b.rooms.length>ASK_FOLD?`<button class="more" onclick="this.parentNode.querySelectorAll('.ar[hidden]').forEach(e=>e.hidden=false);this.remove()">${b.rooms.length-ASK_FOLD}곳 더 보기</button>`:'';
+    html+=`<div class="ab" ${bi>=ASK_FOLD_B?'hidden':''} style="animation-delay:${Math.min(bi,6)*.05}s"><h3>${esc(b.name)}<span>${esc(b.code)} · ${b.rooms.length}곳</span></h3>${rows}${more}</div>`;
+  });
+  if(hit.length>ASK_FOLD_B)html+=`<button class="more" onclick="document.querySelectorAll('#askBody .ab[hidden]').forEach(e=>e.hidden=false);this.remove()">건물 ${hit.length-ASK_FOLD_B}곳 더 보기</button>`;
+  return html;
+}
+document.getElementById('askForm').addEventListener('submit',e=>{e.preventDefault();ask()});
+renderAskHome();
+
+/* ───── 라우팅: #E21 → 빈 강의실, #ask → 물어보기, #cal → 학사 일정, 없으면 건물 선택 ───── */
 function go(c){location.hash=c}
 async function route(){
-  const c=decodeURIComponent(location.hash.slice(1)).toUpperCase(), sc={pick:'screen',list:'screen',cal:'screen'};
+  const c=decodeURIComponent(location.hash.slice(1)).toUpperCase(), sc={pick:'screen',list:'screen',ask:'screen',cal:'screen'};
   if(c&&c!=='CAL'){try{await loadBuildings()}catch{}}
   if(c==='CAL'){renderCal();sc.cal='screen on'}
-  else if(c&&byCode(c)){st.code=c;st.live=true;st.only=true;store.add(c);renderList();sc.pick='screen left';sc.list='screen on'}
+  else if(c==='ASK'){sc.ask='screen on'}
+  else if(c&&byCode(c)){st.code=c;st.live=true;st.only=true;
+    if(jump){st.live=false;st.day=jump.day;st.t=Math.min(Math.max(jump.t,OPEN),CLOSE-30);jump=null}
+    store.add(c);renderList();sc.pick='screen left';sc.list='screen on'}
   else{st.code=null;renderPick();sc.pick='screen on'}
   for(const id in sc)document.getElementById(id).className=sc[id];
-  document.getElementById('tabRooms').classList.toggle('on',c!=='CAL');
+  document.getElementById('tabRooms').classList.toggle('on',c!=='CAL'&&c!=='ASK');
+  document.getElementById('tabAsk').classList.toggle('on',c==='ASK');
   document.getElementById('tabCal').classList.toggle('on',c==='CAL');
   scrollTo(0,0);
 }
@@ -445,9 +676,12 @@ addEventListener('hashchange',route);
 document.getElementById('q').addEventListener('input',renderPick);
 setInterval(()=>{if(st.live&&document.visibilityState==='visible'&&location.hash)renderList()},60000);
 
-/* 첫 방문은 스플래시 전체, 이후엔 짧게 */
-let seen=false;try{seen=sessionStorage.getItem('bingang.seen')==='1';sessionStorage.setItem('bingang.seen','1')}catch{}
-playSplash(seen?1200:2600);
+/* 스플래시는 이 브라우저에서 처음 들어왔을 때 한 번만 (본 적 있으면 <head>에서 seen 클래스로 숨김) */
+if(!document.documentElement.classList.contains('seen')){
+  try{localStorage.setItem('bingang.seen','1')}catch{}
+  playSplash(2600);
+}
 route();
+renderExam();
 </script>
 </body></html>

@@ -10,13 +10,19 @@ public enum ErrorCode {
 	MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "필수 요청값이 누락되었습니다."),
 	INVALID_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "요청값 형식이 올바르지 않습니다."),
 	METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다."),
+	INVALID_REQUEST_BODY(HttpStatus.BAD_REQUEST, "요청 본문을 읽을 수 없습니다. JSON 형식을 확인해 주세요."),
+	UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 요청 형식입니다. application/json으로 보내 주세요."),
 	RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
 
 	// building
 	BUILDING_NOT_FOUND(HttpStatus.NOT_FOUND, "건물을 찾을 수 없습니다."),
 
 	// calendar
-	INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "조회 기간이 올바르지 않습니다. 시작일이 종료일보다 늦거나 1년을 넘었습니다.");
+	INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "조회 기간이 올바르지 않습니다. 시작일이 종료일보다 늦거나 1년을 넘었습니다."),
+
+	// ask
+	ASK_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "오늘 물어볼 수 있는 횟수를 다 썼어요. 내일 다시 이용해 주세요."),
+	ASK_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "지금은 답할 수 없어요. 빈 강의실 탭에서 직접 찾아 주세요.");
 
 	private final HttpStatus status;
 

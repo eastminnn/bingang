@@ -35,6 +35,33 @@ public final class DaySchedule {
 		return RoomState.free(null);
 	}
 
+	/** [start, end) 동안 겹치는 수업이 하나도 없으면 그 구간 내내 비어 있다 (물어보기, #74) */
+	public boolean freeBetween(LocalTime start, LocalTime end) {
+		return sessions.stream().noneMatch(s -> s.start().isBefore(end) && start.isBefore(s.end()));
+	}
+
+	/** [from, to) 안에서 수업이 없는 구간들 (시간 순). 물어보기에서 시간을 말하지 않았을 때 그날 빈 시간대로 쓴다 */
+	public List<Session> freeSlots(LocalTime from, LocalTime to) {
+		List<Session> free = new ArrayList<>();
+		LocalTime cursor = from;
+		for (Session session : sessions) {
+			if (!session.end().isAfter(cursor)) {
+				continue;
+			}
+			if (!session.start().isBefore(to)) {
+				break;
+			}
+			if (session.start().isAfter(cursor)) {
+				free.add(new Session(cursor, session.start()));
+			}
+			cursor = session.end();
+		}
+		if (cursor.isBefore(to)) {
+			free.add(new Session(cursor, to));
+		}
+		return List.copyOf(free);
+	}
+
 	// 교시 단위로 수집하면 연강이 09:00-09:30, 09:30-10:00 처럼 잘게 들어오므로 이어 붙인다
 	private static List<Session> merge(List<Session> sessions) {
 		List<Session> sorted = sessions.stream().sorted(Comparator.comparing(Session::start)).toList();
