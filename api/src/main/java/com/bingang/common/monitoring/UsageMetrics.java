@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * 건물 코드는 목록에 보이는 건물(약 30개)로 한정되고 이름은 코드와 1:1이라 라벨로 써도 시계열이 늘지 않는다.
  * 부하 테스트 요청(User-Agent bingang-loadtest)은 세지 않는다.
+ * {@code bingang_ask_requests_total{result}}: 물어보기 요청 수. result는 ok / not_understood / limited / failed / unavailable
  */
 @Component
 @RequiredArgsConstructor
@@ -30,6 +31,15 @@ public class UsageMetrics {
 			.tag("name", buildingName)
 			.tag("mode", scheduled ? "scheduled" : "now")
 			.description("건물 강의실 조회 수")
+			.register(registry)
+			.increment();
+	}
+
+	// 질문 원문은 남기지 않고 결과 종류만 센다
+	public void asked(String result) {
+		Counter.builder("bingang.ask.requests")
+			.tag("result", result)
+			.description("물어보기 요청 수")
 			.register(registry)
 			.increment();
 	}
